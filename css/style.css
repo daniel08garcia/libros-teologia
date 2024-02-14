@@ -1,6 +1,8 @@
 q {
-    text-decoration-line: underline;
-    text-decoration-style: dotted;
-    text-underline-position: under;
-  }
-   
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-underline-position: under;
+}
+q:hover::after {
+  content: "(" attr(title) ")" close-quote;
+}
