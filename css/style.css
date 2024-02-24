@@ -14,3 +14,11 @@ q:hover::after {
 blockquote[title]:hover::after {
   content: "(" attr(title) ")";
 }
+p {
+  text-indent: 1em;
+  text-align: justify;
+}
+body {
+  font-family: "Bookman Old Style", Georgia, serif;
+  line-height: 1.3;
+}
