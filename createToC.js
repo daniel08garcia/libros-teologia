@@ -27,9 +27,9 @@ function createTableOfContents(dir, depth = 0) {
                 const sermonId = document.querySelector('head').getAttribute('data-sermon-id');
                 const linkText = sermonId ? `Sermon:${sermonId} ${fileName}` : fileName;
 
-                tableOfContents += `${' '.repeat(depth * 4)}<li><a href="${fileName}">${linkText}</a></li>`;
+                tableOfContents += `${' '.repeat(depth * 4)}<li><a href="${filePath}">${linkText}</a></li>`;
             } else {
-                tableOfContents += `${' '.repeat(depth * 4)}<li><a href="${fileName}">${fileName}</a></li>`;
+                tableOfContents += `${' '.repeat(depth * 4)}<li><a href="${filePath}">${fileName}</a></li>`;
             }
         }
     });
