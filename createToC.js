@@ -1,46 +1,48 @@
-const fs = require('fs');
-const path = require('path');
-const { JSDOM } = require('jsdom');
+const fs = require("fs");
+const path = require("path");
+const { JSDOM } = require("jsdom");
 
-const directoryPath = './siglo';
-const outputFilePath = './index.html';
+const directoryPath = "./siglo";
+const outputFilePath = "./index.html";
 
 function createTableOfContents(dir, depth = 0) {
-    let files = fs.readdirSync(dir);
-    let tableOfContents = '';
+  let files = fs.readdirSync(dir);
+  let tableOfContents = "";
 
-    files.forEach(file => {
-        const filePath = path.join(dir, file);
-        const stats = fs.statSync(filePath);
+  files.forEach((file) => {
+    const filePath = path.join(dir, file);
+    const stats = fs.statSync(filePath);
 
-        if (stats.isDirectory()) {
-            // Recursively traverse subdirectories
-            tableOfContents += `${' '.repeat(depth * 4)}<li><span class="folder">${file}</span><ul>`;
-            tableOfContents += createTableOfContents(filePath, depth + 1);
-            tableOfContents += `${' '.repeat(depth * 4)}</ul></li>`;
-        } else {
-            const fileName = path.basename(file);
-            if (fileName.endsWith('.html')) {
-                const htmlContent = fs.readFileSync(filePath, 'utf8');
-                const { document } = new JSDOM(htmlContent).window;
+    if (stats.isDirectory()) {
+      // Recursively traverse subdirectories
+      tableOfContents += `<li><span class="folder">${file}</span><ul>`;
+      tableOfContents += createTableOfContents(filePath, depth + 1);
+      tableOfContents += `</ul></li>`;
+    } else {
+      const fileName = path.basename(file);
+      if (fileName.endsWith(".html")) {
+        const htmlContent = fs.readFileSync(filePath, "utf8");
+        const { document } = new JSDOM(htmlContent).window;
 
-                const sermonId = document.querySelector('head').getAttribute('data-sermon-id');
-                const linkText = sermonId ? `Sermon:${sermonId} ${fileName}` : fileName;
+        const sermonId = document
+          .querySelector("head")
+          .getAttribute("data-sermon-id");
+        const linkText = sermonId ? `Sermon:${sermonId} ${fileName}` : fileName;
 
-                tableOfContents += `${' '.repeat(depth * 4)}<li><a href="${filePath}">${linkText}</a></li>`;
-            } else {
-                tableOfContents += `${' '.repeat(depth * 4)}<li><a href="${filePath}">${fileName}</a></li>`;
-            }
-        }
-    });
+        tableOfContents += `<li><a href="${filePath}">${linkText}</a></li>`;
+      } else {
+        tableOfContents += `<li><a href="${filePath}">${fileName}</a></li>`;
+      }
+    }
+  });
 
-    return tableOfContents;
+  return tableOfContents;
 }
 
 function generateHTMLTableOfContents() {
-    const tableContent = createTableOfContents(directoryPath);
+  const tableContent = createTableOfContents(directoryPath);
 
-    const htmlContent = `
+  const htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -56,7 +58,7 @@ function generateHTMLTableOfContents() {
     </html>
     `;
 
-    fs.writeFileSync(outputFilePath, htmlContent);
+  fs.writeFileSync(outputFilePath, htmlContent);
 }
 
 generateHTMLTableOfContents();
