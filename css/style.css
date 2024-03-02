@@ -20,7 +20,7 @@ p {
 }
 body {
   font-family: "Bookman Old Style", Georgia, serif;
-  line-height: 1.3;
+  line-height: 1.5;
 }
 /* Hide the cover page image by default */
 .cover-image {
@@ -32,10 +32,10 @@ body {
   /* Show the cover page image when printing */
   .cover-image {
     display: block;
-    width: 101%;
+    width: 100%;
     height: auto;
   }
   body {
-    margin: 1.5em;
+    margin: 2em;
   }
 }
