@@ -44,10 +44,12 @@ function generateHTMLTableOfContents() {
 
   const htmlContent = `
     <!DOCTYPE html>
-    <html>
+    <html lang="es">
     <head>
     <title>&Iacute;ndice</title>
-	<link rel="stylesheet" href="css/style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="&Iacute;ndice">
+	  <link rel="stylesheet" href="css/style.css" />
     </head>
     <body>
     <h1>&Iacute;ndice</h1>
