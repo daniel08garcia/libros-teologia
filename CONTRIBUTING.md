@@ -10,6 +10,7 @@ Cuando trabajes en archivos HTML en este proyecto, asegúrate de utilizar solo l
 - `<p>`: para párrafos.
 - `<q>`: para citas cortas en línea.
 - `<blockquote>`: para citas de bloque.
+- `<u>`, `<i>`, `<b>`: para resaltar texto.
 
 ## Ejemplo de Uso Correcto
 
@@ -24,10 +25,20 @@ Cuando trabajes en archivos HTML en este proyecto, asegúrate de utilizar solo l
     data-sermon-title-original="[Titulo original]"
   >
     <meta charset="UTF-8" />
-    <link rel="stylesheet" href="../../../css/style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="[Descripci&oacute;n/Titulo en español]" />
     <title>Ejemplo</title>
+    <link rel="stylesheet" href="../../../css/style.css" />
   </head>
   <body>
+    <!-- Cover Page Image -->
+    <img
+      class="cover-image"
+      src="../../../assets/portada-1.svg"
+      alt="Cover Page Image"
+    />
+    <div style="break-after: page"></div>
+
     <h1>Título Principal</h1>
     <p>Este es un párrafo de ejemplo.</p>
     <blockquote title="3 Juan 1:1">
