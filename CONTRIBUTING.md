@@ -28,6 +28,7 @@ Cuando trabajes en archivos HTML en este proyecto, asegúrate de utilizar solo l
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="[Descripci&oacute;n/Titulo en español]" />
     <title>Ejemplo</title>
+    <link rel="icon" type="image/x-icon" href="../../../assets/favicon.ico" />
     <link rel="stylesheet" href="../../../css/style.css" />
   </head>
   <body>
