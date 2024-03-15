@@ -15,7 +15,7 @@ function createTableOfContents(dir, depth = 0) {
 
     if (stats.isDirectory()) {
       // Recursively traverse subdirectories
-      tableOfContents += `<li><span class="folder">${file}</span><ul>`;
+      tableOfContents += `<li>${file}<ul>`;
       tableOfContents += createTableOfContents(filePath, depth + 1);
       tableOfContents += `</ul></li>`;
     } else {
