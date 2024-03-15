@@ -49,6 +49,7 @@ function generateHTMLTableOfContents() {
     <title>&Iacute;ndice</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Colección de textos teológicos traducidos al español">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
 	  <link rel="stylesheet" href="css/style.css" />
     </head>
     <body>
