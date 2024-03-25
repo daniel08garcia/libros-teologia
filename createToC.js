@@ -12,7 +12,7 @@ function createTableOfContents(dir, depth = 0) {
   files.forEach((file) => {
     const filePath = path.join(dir, file);
     const stats = fs.statSync(filePath);
-
+    let filePathUrl = filePath.replaceAll(String.fromCharCode(92), "/");
     if (stats.isDirectory()) {
       // Recursively traverse subdirectories
       tableOfContents += `<li>${file}<ul>`;
@@ -29,9 +29,9 @@ function createTableOfContents(dir, depth = 0) {
           .getAttribute("data-sermon-id");
         const linkText = sermonId ? `Sermon:${sermonId} ${fileName}` : fileName;
 
-        tableOfContents += `<li><a href="${filePath}">${linkText}</a></li>`;
+        tableOfContents += `<li><a href="${filePathUrl}">${linkText}</a></li>`;
       } else {
-        tableOfContents += `<li><a href="${filePath}">${fileName}</a></li>`;
+        tableOfContents += `<li><a href="${filePathUrl}">${fileName}</a></li>`;
       }
     }
   });

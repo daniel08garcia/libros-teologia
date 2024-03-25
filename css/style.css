@@ -38,4 +38,7 @@ body {
   body {
     margin: 2em;
   }
+  q::after {
+    content: "(" attr(title) ")" close-quote;
+  }
 }
