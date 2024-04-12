@@ -39,6 +39,10 @@ Puedes aprovechar la función "leer en voz alta" del navegador Microsoft Edge pa
 3. En el menú emergente, busca y selecciona la opción "Leer en voz alta".
 4. El navegador comenzará a leer el texto en voz alta. Puedes ajustar la velocidad de lectura y detener la reproducción según sea necesario.
 
+![Instrucciones de "Leer en voz alta"](assets/ReadAloud-M1.jpg)
+
+![Instrucciones de "Leer en voz alta"](assets/ReadAloud-M2.jpg)
+
 ## Sobre el Proyecto
 
 Este proyecto se enfoca en la traducción de textos teológicos de siglos pasados al español. Creemos que al hacer accesibles estos textos en español, estamos proporcionando una oportunidad para que más personas puedan estudiar y aprender de la rica tradición teológica de la historia de la Iglesia.
