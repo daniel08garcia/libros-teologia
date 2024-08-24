@@ -26,6 +26,9 @@ body {
   font-family: "Times New Roman", Times, serif;
   font-size: 1.5em;
 }
+ul {
+line-height: 1.5;
+}
 /* Hide the cover page image by default */
 .cover-image {
   display: none;
