@@ -102,7 +102,7 @@ function generateHTMLList(structure) {
       .join("");
     return `<li>${structure.name}<ul>${content}</ul></li>`;
   } else if (structure.type === "file" && structure.sermonId !== "undefined") {
-    return `<li><a href="siglo/${structure.relativePath}">Sermon:${structure.sermonId}  ${structure.name} </a></li>`;
+    return `<li><a href="siglo/${structure.relativePath}"> <b class="sermon-id-index"> Sermon:${structure.sermonId} </b>  ${structure.name} </a></li>`;
   }
   return "";
 }

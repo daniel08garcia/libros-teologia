@@ -29,9 +29,17 @@ body {
 ul {
 line-height: 1.5;
 }
+li::marker {
+  color: rgb(135, 30, 30);
+}
 /* Hide the cover page image by default */
 .cover-image {
   display: none;
+}
+@media only screen and (max-width: 600px) {
+  .sermon-id-index {
+    display: none;
+  }
 }
 
 /* Define styles specifically for printing */
