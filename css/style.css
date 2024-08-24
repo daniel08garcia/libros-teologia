@@ -9,10 +9,10 @@ h1 {
   text-align: center;
 }
 q:hover::after {
-  content: "(" attr(title) ")" close-quote;
+  content: " (" attr(title) ")" close-quote;
 }
 blockquote[title]:hover::after {
-  content: "(" attr(title) ")";
+  content: " (" attr(title) ")";
 }
 p {
   text-indent: 1em;
@@ -44,6 +44,6 @@ body {
     font-size: 1.5em;
   }
   q::after {
-    content: "(" attr(title) ")" close-quote;
+    content: " (" attr(title) ")" close-quote;
   }
 }
