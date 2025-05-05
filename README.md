@@ -24,22 +24,28 @@ Puedes aprovechar la función "leer en voz alta" del navegador Microsoft Edge pa
 ### Desde la app de ElevenReader
 
 - **Toca el gran botón “+”** que aparece en el centro de la barra inferior. Ahí comienzan todas las importaciones de contenido.
-  ![ElevenReader"](assets/ElevenReader1.jpg)
+
+![ElevenReader"](assets/ElevenReader1.jpg)
 
 - En el panel **Import content**, elige **“Paste a link”**. Esta opción sirve para transformar en audio cualquier página web o artículo en línea.
-  ![ElevenReader"](assets/ElevenReader2.jpg)
+
+![ElevenReader"](assets/ElevenReader2.jpg)
 
 - Se abrirá el campo de texto para la URL. **Mantén pulsado y pega** (o escribe) la dirección completa que quieras escuchar.
-  ![ElevenReader"](assets/ElevenReader3.jpg)
+
+![ElevenReader"](assets/ElevenReader3.jpg)
 
 - En tu navegador u otra app, **copia** el enlace del artículo (selecciónalo y pulsa ‘Copiar’). Este paso solo ilustra de dónde sale la dirección URL.
-  ![ElevenReader"](assets/ElevenReader4.jpg)
+
+![ElevenReader"](assets/ElevenReader4.jpg)
 
 - Una vez pegado el enlace, el botón **“Next”** se iluminará. Tócalo para que ElevenReader analice la página y extraiga el texto.
-  ![ElevenReader"](assets/ElevenReader5.jpg)
+
+![ElevenReader"](assets/ElevenReader5.jpg)
 
 - Cuando el artículo cargue, toca **“Listen”** (arriba a la derecha) para que la app genere y reproduzca el audio al instante. ¡Listo!
-  ![ElevenReader"](assets/ElevenReader6.jpg)
+
+![ElevenReader"](assets/ElevenReader6.jpg)
 
 #### Consejos rápidos después de pulsar **Listen**
 
