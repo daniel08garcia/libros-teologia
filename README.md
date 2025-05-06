@@ -31,7 +31,7 @@ Puedes aprovechar la función "leer en voz alta" del navegador Microsoft Edge pa
 
 ![ElevenReader"](assets/ElevenReader2.jpg)
 
-- Se abrirá el campo de texto para la URL. **Mantén pulsado y pega** (o escribe) la dirección completa que quieras escuchar.
+- Se abrirá el campo de texto para la URL.
 
 ![ElevenReader"](assets/ElevenReader3.jpg)
 
@@ -49,7 +49,7 @@ Puedes aprovechar la función "leer en voz alta" del navegador Microsoft Edge pa
 
 #### Consejos rápidos después de pulsar **Listen**
 
-1. **Cambiar voz o velocidad:** toca el icono de ondas (abajo) mientras escuchas.
+1. **==Cambiar voz, idioma o velocidad==:** toca el icono de ondas (abajo) mientras escuchas.
 2. **Lectura destacada:** cada palabra se resalta a medida que se pronuncia, útil para seguir el texto.
 3. **Sin gastar créditos:** la app usa un servidor aparte; no descuenta caracteres de tu plan ElevenLabs.
 4. **Sólo streaming interno:** por ahora no se puede descargar el audio; vuelve a la app para re-escucharlo.
