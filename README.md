@@ -19,7 +19,7 @@ Para una experiencia de lectura más cómoda y portátil, te recomendamos imprim
 
 ## Escuchando el Documento
 
-Puedes aprovechar la función "leer en voz alta" del navegador Microsoft Edge para escuchar los documentos en tu navegador. Sigue estos pasos:
+Puedes aprovechar la función "leer en voz alta" del navegador Microsoft Edge o alguna aplicación como ElevenReader para escuchar los documentos en tu computadora o teléfono móvil. Para ello sigue estos pasos:
 
 ### Desde la app de ElevenReader
 
