@@ -1,21 +1,228 @@
-MIT License
+# Non-Commercial Attribution ShareAlike **Translation** License
 
-Copyright (c) 2024 daniel08garcia
+**(NCAS-TL) v1.0**
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+**Effective date:** 09/15/2025
+**Translator / Licensor:** Daniel Garcia P
+**Repository URL:** https://github.com/daniel08garcia/libros-teologia
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+> **Plain-language notice (not a substitute for the license):** This license lets people freely copy, share, and adapt the **translated text** in this repository **for non-commercial purposes only**, so long as they **credit the translator** (and the original author) and **license adaptations under the same terms**. **No sales or monetization** are allowed. **AI training and academic research** may use the Work even by commercial entities, but **redistribution** of the Work (or substantial portions) and **outputs that reproduce substantial portions** must still follow the **Non-Commercial**, **Attribution**, and **ShareAlike** requirements. The translator may release future versions of this license. This license applies **worldwide** and chooses **no specific governing law**. The Work is provided **“as is”**.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+---
+
+## 1. Preamble (Purpose & Scope)
+
+1.1. The purpose of this license is to enable broad, non-commercial access to and reuse of original **translations** of older literary works prepared by the Translator (as defined below), while preserving proper attribution, prohibiting sale and monetization, and ensuring that derivative translations and adaptations remain available under the same terms. This license is designed to be neutral across jurisdictions and framed in clear, modern English.
+
+1.2. This license applies **only** to the **translated text** and the Translator-authored textual materials contained in the repository identified above (collectively, the “Work”), and **not** to any third-party materials that may appear in the repository (such as images, scans, audio, code, or other assets) unless a file or directory expressly states that such materials are licensed under NCAS-TL v1.0.
+
+1.3. This license is an original instrument and is not a copy of any other public license. It is tailored for translation projects hosted on code forges such as GitHub, while remaining suitable for distribution in physical or other digital formats.
+
+---
+
+## 2. Definitions
+
+For purposes of this license:
+
+2.1. **“Translator”** (or **“Licensor”**) means the individual or entity that owns this repository and that prepared the Work (the translation), and that is granting rights under this license.
+
+2.2. **“Original Author”** means the author(s) of the source text from which the translation was made.
+
+2.3. **“Work”** means the Translator’s creative expression in the form of the translated text, together with Translator-authored notes, footnotes, annotations, introductions, glossaries, commentary, and editorial matter contained in this repository, but **excluding**: (a) the underlying source text as such; and (b) any third-party materials (e.g., images, scans, typesetting files, cover art, audio, or code) unless explicitly labeled as part of the Work and licensed under NCAS-TL v1.0.
+
+2.4. **“You”** (or **“Your”**) means any person or entity exercising rights under this license.
+
+2.5. **“Non-Commercial”** means use that does **not** seek or result in **commercial or monetary advantage** or **financial remuneration** of any kind, whether direct or indirect, including without limitation: advertising or ad-supported distribution; sponsorships; paywalls; subscriptions or membership fees; affiliate links; paid bundles; “premium” tiers; donations conditioned on access; data-for-access or lead-generation schemes; token- or NFT-based sales or gatekeeping; sale of physical copies; or any other profit-driven exploitation. Incidental or unavoidable costs of non-commercial dissemination (e.g., non-profit library photocopying at cost) do **not** convert a use into a commercial one **only if** no sale or markup occurs; however, **Section 5.2 (No Sale)** separately prohibits sale.
+
+2.6. **“ShareAlike”** means that any Derivative Work (defined below) must be licensed under this same license, the **Non-Commercial Attribution ShareAlike Translation License (NCAS-TL) v1.0**, or **a later version** of the NCAS-TL published by the Translator under Section 9 (Versioning & Updates).
+
+2.7. **“Derivative Work”** means any work that is based on or derived from the Work, including but not limited to: revised or updated translations; adaptations to modern orthography; abridgments; compilations that reproduce substantial portions of the translation; audio or dramatic readings that present the translated text; or any other transformation, arrangement, or modification of the translated text or substantial portions thereof. Compilation of the Work **as-is** alongside other works without modifying it is not a Derivative Work, but distribution remains subject to Section 5 (Conditions).
+
+2.8. **“Substantial Portion”** means any portion of the Work that is more than trivial in **quality or quantity** when viewed from the perspective of a reasonable reader of the Work, including (by way of example and not limitation): contiguous passages that convey the Translator’s narrative, stylistic, or expressive choices; sections such as chapters, scenes, stanzas, or extended paragraphs; or any cumulative excerpt that in aggregate serves as a meaningful substitute for the Work in that area. A brief citation for critique, review, or scholarly discussion may be non-substantial depending on the context and length.
+
+2.9. **“Distribute”** means to make the Work or a Derivative Work available to the public by any means, including without limitation: reproduction; public display; public performance; hosting on websites or platforms; physical dissemination; or providing copies via any network or physical medium.
+
+2.10. **“AI Training”** means the processes of pre-processing, tokenizing, indexing, embedding, augmenting, and using the Work (or datasets containing it) to **train, fine-tune, evaluate, or benchmark** machine learning or artificial intelligence systems, including by commercial entities, **without** publicly redistributing the Work or substantial portions of it as training data or as generated output.
+
+2.11. **“Model Output”** means any content produced by a model that has been trained, fine-tuned, or prompted in whole or in part on the Work.
+
+---
+
+## 3. Grant of Rights
+
+Subject to Your full compliance with this license, the Translator grants You a worldwide, royalty-free, non-exclusive license to:
+
+3.1. **Copy and Reproduce** the Work in whole or in part for **Non-Commercial** purposes;
+
+3.2. **Distribute** the Work for **Non-Commercial** purposes;
+
+3.3. **Create, Adapt, and Transform** the Work to produce **Derivative Works** for **Non-Commercial** purposes, provided such Derivative Works are licensed **only** under NCAS-TL v1.0 or a later version published by the Translator (Section 9);
+
+3.4. **Publicly Perform and Display** the Work and any Derivative Works for **Non-Commercial** purposes; and
+
+3.5. **Use the Work for AI Training and academic research** as expressly set out in Section 6 (AI Training Exception).
+
+Except as expressly granted, all rights are reserved by the Translator.
+
+---
+
+## 4. Scope Limitation: Translation Only; Third-Party Materials
+
+4.1. This license covers **only** the translator’s **original expression** embodied in the translated text and Translator-authored textual materials contained in this repository.
+
+4.2. This license does **not** apply to: (a) the **source text** in its original language; or (b) **third-party materials** (such as images, scans, audio, typesetting files, cover art, or code) present in the repository unless a file or directory explicitly states that it is part of the Work and licensed under NCAS-TL v1.0. Such third-party materials may be subject to different terms.
+
+---
+
+## 5. Conditions of Use
+
+Your exercise of the rights in Section 3 is conditioned on **all** of the following:
+
+### 5.1. Non-Commercial Only
+
+You may **not** use the Work or any Derivative Work for **commercial or monetary benefit**, whether direct or indirect. Prohibited forms of monetization include, without limitation: ads (display, pre-roll, mid-roll, in-feed, sponsorship readouts); sponsorships; paywalls or metered access; subscriptions or membership dues; affiliate or referral links; paid newsletters; “tip to access” or “donate to unlock” models; data-for-access or lead-generation; bundling the Work (or substantial portions) into paid products or services; token-gated or NFT-based access; or any revenue-sharing or monetized hosting arrangements. Hosting on a platform that shows ads is **prohibited** where the Work or a Derivative Work appears in the ad-supported area, regardless of whether You personally receive revenue.
+
+### 5.2. No Sale (Absolute Prohibition)
+
+You may **not sell** the Work or any Derivative Work **in any form**. “Sale” includes any transfer of a copy or access for money or for something of monetary value, including cost-recovery pricing, printing fees, or “at cost” transactions. The only narrow allowance is reproduction by a truly non-profit library or archive that provides **free** copies without markup or consideration; even then, no sale occurs and all other conditions still apply.
+
+### 5.3. Attribution
+
+Whenever You reproduce, share, or distribute the Work or a Derivative Work in any medium, You must provide **clear and reasonable attribution** that, at minimum, includes:
+(a) the name or accepted pseudonym of the **Translator**;
+(b) the **title** of the translated Work (if any) and a reference to the **Original Author**; and
+(c) a link or reference to the **license name and version** (NCAS-TL v1.0) and, where feasible, the repository URL.
+
+Attribution must be prominent in the customary location for such credits (e.g., title page, colophon, metadata, README, page footer, or video description) and may not suggest sponsorship or endorsement by the Translator.
+
+### 5.4. Free Copying & Sharing
+
+You may copy, reproduce, and share the Work in physical or digital form **for non-commercial purposes** as long as You comply with Sections 5.1–5.3, 5.5–5.7, and 6.
+
+### 5.5. Derivative Works (ShareAlike)
+
+If You create a Derivative Work, You must:
+(a) release it **only** under this same license, **NCAS-TL v1.0** or a **later version** of NCAS-TL published by the Translator (Section 9);
+(b) keep it **Non-Commercial** and **No Sale**;
+(c) include **Attribution** to both the Translator and the Original Author; and
+(d) provide a **Change Log** or reasonable notice describing the material changes You made.
+
+You may not apply legal or technological measures (including DRM) that restrict others from exercising the rights granted by this license.
+
+### 5.6. Notice of License
+
+All copies of the Work and all Derivative Works must include the **name of this license** (NCAS-TL v1.0) and a link or reference to the full text, together with any copyright or moral-rights notices supplied by the Translator.
+
+### 5.7. No Additional Restrictions
+
+You may not impose terms or technological measures that alter or limit the permissions granted by this license, nor may You sublicense the Work under different terms. You may offer additional permissions for Your own contributions to a Derivative Work, provided such permissions do not reduce or conflict with the NCAS-TL terms for the Work or any portion derived from it.
+
+---
+
+## 6. AI Training Exception (and Limits)
+
+6.1. **Training & Evaluation Allowed.** Notwithstanding Sections 5.1 and 5.2, **AI Training and academic research uses are permitted**, including by **commercial entities**, to the extent required to ingest, pre-process, tokenize, index, embed, augment, train, fine-tune, evaluate, or benchmark models **internally**.
+
+6.2. **No Dataset Redistribution.** This exception **does not** authorize You to re-publish, re-license, or otherwise **redistribute the Work (or Substantial Portions) as part of a dataset or data service**. Any redistribution of the Work remains subject to the **Non-Commercial**, **Attribution**, **ShareAlike**, and **No Sale** conditions.
+
+6.3. **Expressive Outputs that Reproduce the Work.** If Model Outputs **reproduce Substantial Portions** of the Work (e.g., passages that are recognizably the Translator’s expressive choices), such outputs are treated as **use of the Work** and therefore must comply with **Non-Commercial**, **Attribution**, **ShareAlike**, and **No Sale**. Summaries, embeddings, or **non-expressive** statistical representations that do not reproduce Substantial Portions are not restricted by this clause.
+
+6.4. **No Endorsement or Sponsorship.** AI Training or evaluation under this exception may not be represented as endorsed by the Translator, and any public disclosures about datasets should identify the license and respect the restrictions in Section 6.2.
+
+---
+
+## 7. Prohibited Uses (Illustrative)
+
+Without limiting Sections 5 and 6, the following are **prohibited**:
+
+7.1. Posting the Work or a Derivative Work on ad-supported platforms or pages, including where ads are served by the platform and cannot be disabled, if the Work appears in the ad-supported area.
+
+7.2. Sponsorship reads, branded integrations, or affiliate links on pages, videos, podcasts, newsletters, or posts that contain the Work or Derivative Works.
+
+7.3. Paywalls, “members-only” access, subscriptions, pay-per-download, “premium” tiers, or donations required to view or obtain copies.
+
+7.4. Selling printed or digital copies, “at cost” or otherwise, including in anthologies or bundles.
+
+7.5. Redistributing the Work or Substantial Portions as part of a dataset, data feed, or scraping dump.
+
+7.6. Using DRM, access controls, or additional legal terms that limit recipients from exercising NCAS-TL rights.
+
+---
+
+## 8. Term & Termination
+
+8.1. This license takes effect on the Effective Date and continues unless terminated as provided here.
+
+8.2. If You violate any term of this license, Your rights under it **automatically terminate**. If You cease the violation and make a good-faith effort to cure within **30 days** after becoming aware or receiving notice, Your license may be **reinstated** prospectively by the Translator in their discretion.
+
+8.3. Termination does not affect rights of recipients who received copies from You under this license, provided they remain in compliance. Upon termination, You must stop using, reproducing, and distributing the Work and any Derivative Works, except as allowed by any applicable limitations or exceptions that do not rely on this license.
+
+---
+
+## 9. Versioning & Updates
+
+9.1. The Translator may **reevaluate and publish** updated versions of NCAS-TL. Future versions will be identified by a new version number and may clarify, modify, or refine terms in light of experience and community feedback.
+
+9.2. **ShareAlike Forward-Compatibility.** Derivative Works must be licensed under **NCAS-TL v1.0 or any later version published by the Translator**. Existing copies already distributed under an earlier version remain under that version unless recipients choose to adopt a later one.
+
+---
+
+## 10. Worldwide Application; No Governing Law
+
+10.1. This license applies **worldwide**. It is drafted to be neutral across jurisdictions and does not select or concede to any particular governing law, forum, or venue.
+
+10.2. Nothing in this license restricts any rights that cannot be limited under the laws that apply to You (e.g., user rights, limitations, or exceptions recognized where You are located).
+
+---
+
+## 11. Severability
+
+If any provision of this license is held unenforceable, the remaining provisions shall remain in full force and effect and shall be interpreted to achieve the license’s purposes as closely as possible.
+
+---
+
+## 12. No Waiver
+
+A failure by the Translator to enforce any provision of this license shall not be deemed a waiver of future enforcement of that or any other provision.
+
+---
+
+## 13. Disclaimer of Warranties
+
+THE WORK IS PROVIDED **“AS IS”** AND **AS AVAILABLE**, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING WITHOUT LIMITATION ANY WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE WORK.
+
+---
+
+## 14. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED, IN NO EVENT SHALL THE TRANSLATOR BE LIABLE FOR ANY DAMAGES, WHETHER DIRECT, INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE, OR FOR ANY LOSS OF PROFITS, REVENUE, DATA, GOODWILL, OR ANTICIPATED SAVINGS, ARISING OUT OF OR IN CONNECTION WITH THIS LICENSE OR THE USE OF THE WORK, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+---
+
+## 15. Attribution Facilitation (Recommended Form)
+
+When feasible, the following credit is recommended:
+
+> “Translated from \[Original Title] by \[Original Author], translation © \[year] \[Translator Name], licensed under **Non-Commercial Attribution ShareAlike Translation License (NCAS-TL) v1.0**. Repository: \[URL].”
+
+---
+
+## 16. Implementation Notes for This Repository (Non-binding Guidance)
+
+16.1. Place this license text at the repository root as `LICENSE-NCAS-TL.md`.
+
+16.2. In each directory containing translated text, include a short header referencing **NCAS-TL v1.0** and the Translator’s name.
+
+16.3. Clearly label any third-party materials with their separate licenses or permissions. If a file is meant to be part of the Work, state “Licensed under NCAS-TL v1.0”.
+
+---
+
+## 17. Interpretation; No Endorsement
+
+Headings are for convenience and do not affect interpretation. This license does not imply or grant endorsement by the Translator or the Original Author.
+
+---
+
+## 18. Reservation of Rights
+
+Except for the rights expressly granted here, all rights in the Work are reserved by the Translator. Rights in the underlying source text remain with the public domain or with its rights holders, as applicable.
