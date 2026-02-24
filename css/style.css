@@ -27,7 +27,7 @@ body {
   font-size: 1.5em;
 }
 ul {
-line-height: 1.5;
+  line-height: 1.5;
 }
 li::marker {
   color: rgb(135, 30, 30);
@@ -48,7 +48,6 @@ li::marker {
     max-width: 900px;
     line-height: 1.5;
   }
-  
 }
 
 /* Define styles specifically for printing */
@@ -58,6 +57,9 @@ li::marker {
     display: block;
     width: 100%;
     height: auto;
+    /* Ensure the image scales properly while maintaining its aspect ratio */
+    /* Set max-height to prevent the image from exceeding the page height */
+    max-height: 95vh;
   }
   body {
     margin: 2em;
