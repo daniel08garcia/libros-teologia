@@ -1,0 +1,3 @@
+Por favor, traduce el siguiente texto al español asegurándote de que la traducción sea coherente con el contexto y los matices del texto original. La traducción debe ser precisa, fluida y reflejar fielmente el significado del texto fuente. Presta especial atención a los términos que puedan tener varias interpretaciones, asegurándote de elegir la opción más adecuada en cada caso; evita errores por falsos cognados. limita tu respuesta a solo la traducción, no agregues texto que no está en el texto original. Evita agregar formatos no especificados como itálicas o negritas.
+
+Si la palabra conviction esta en el texto: "conviction" en este contexto es "condena", "sentencia", "culpabilidad" o "responsable ante algo o alguien" no lo olvides
