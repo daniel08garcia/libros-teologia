@@ -1,0 +1,385 @@
+[
+  {
+    "termino": "gracious",
+    "en": "\\bgracious(ly|ness)?\\b",
+    "es": "\\bgracios(o|a|os|as|amente)\\b",
+    "solo_es": true,
+    "sugerencias": [
+      "misericordioso",
+      "clemente",
+      "benigno",
+      "afable",
+      "lleno de gracia",
+      "de gracia (gracious affections → afectos de gracia)",
+      "por gracia (gracious deliverance → liberación por gracia / misericordiosa)"
+    ],
+    "nota": "En español 'gracioso' significa chistoso o simpático. En textos teológicos 'gracious' se refiere a la gracia de Dios o a la bondad/clemencia."
+  },
+  {
+    "termino": "conviction / convicted",
+    "en": "\\bconvict(ion|ions|ed|s|ing)?\\b",
+    "es": "\\bconvicci(o|on|ones)\\b|\\bconvicto(s)?\\b",
+    "solo_es": true,
+    "sugerencias": [
+      "conciencia de culpa",
+      "culpabilidad",
+      "convencimiento de pecado",
+      "redargüido (RV1960)",
+      "condena",
+      "sentencia"
+    ],
+    "nota": "Cuando se relaciona con el pecado o con un juicio, 'conviction' es la conciencia de culpa o el veredicto de culpabilidad (como un 'convicto' en un juicio), no una opinión firme. 'Under convictions' → 'con conciencia de su culpa', 'redargüido de pecado'. Solo se deja 'convicción' si significa una creencia firme."
+  },
+  {
+    "termino": "sensible / insensible",
+    "en": "\\b(in)?sensib(le|ly|leness|ility)\\b",
+    "es": "\\b(in)?sensible(s|mente)?\\b|\\b(in)?sensibilidad\\b",
+    "solo_es": true,
+    "sugerencias": [
+      "consciente de",
+      "que percibe / siente",
+      "persuadido de",
+      "insensible → indiferente, sin conciencia de",
+      "sensibly → vívidamente, de manera perceptible"
+    ],
+    "nota": "En el inglés del siglo XVIII 'sensible of' significa 'consciente de, que percibe'. 'Sensible of their misery' → 'conscientes de su miseria'."
+  },
+  {
+    "termino": "actually",
+    "en": "\\bactual(ly)?\\b",
+    "es": "\\bactual(es|mente)?\\b",
+    "sugerencias": [
+      "en realidad",
+      "realmente",
+      "de hecho",
+      "efectivamente",
+      "actual sin → pecado actual (término teológico correcto)"
+    ],
+    "nota": "'Actualmente' significa 'en el presente'. Excepción válida: 'pecado actual' (actual sin) como término teológico opuesto a pecado original."
+  },
+  {
+    "termino": "presently",
+    "en": "\\bpresently\\b",
+    "es": "\\bpresentemente\\b|\\bactualmente\\b|\\ben el presente\\b",
+    "sugerencias": [
+      "en seguida",
+      "pronto",
+      "al instante",
+      "dentro de poco"
+    ],
+    "nota": "En el inglés antiguo 'presently' significa 'inmediatamente, pronto'."
+  },
+  {
+    "termino": "professor / profession (of religion)",
+    "en": "\\bprofess(or|ors|ion|ions)\\b",
+    "es": "\\bprofesor(es|a|as)?\\b|\\bprofesion(es)?\\b(?! de (la )?fe)",
+    "solo_es": true,
+    "sugerencias": [
+      "profesante",
+      "los que profesan la fe",
+      "creyente que profesa",
+      "profesión de fe"
+    ],
+    "nota": "En textos puritanos 'professor' es quien profesa la fe, no un maestro. 'Profession' es la profesión de fe, no un oficio."
+  },
+  {
+    "termino": "conversation (KJV)",
+    "en": "\\bconversation(s)?\\b",
+    "es": "\\bconversaci(o|on|ones)\\b",
+    "sugerencias": [
+      "conducta",
+      "manera de vivir",
+      "proceder",
+      "trato (si realmente es plática)"
+    ],
+    "nota": "En la KJV y en el inglés del siglo XVIII 'conversation' casi siempre significa 'conducta, manera de vivir' (RV1960: 'manera de vivir', 'conducta')."
+  },
+  {
+    "termino": "experimental (religion)",
+    "en": "\\bexperimental(ly)?\\b",
+    "es": "\\bexperimental(es|mente)?\\b",
+    "solo_es": true,
+    "sugerencias": [
+      "experiencial",
+      "vivencial",
+      "de experiencia",
+      "práctica"
+    ],
+    "nota": "'Experimental religion' es la religión vivida por experiencia, no algo de laboratorio."
+  },
+  {
+    "termino": "awful",
+    "en": "\\bawful(ly|ness)?\\b",
+    "es": "\\bhorrible(s|mente)?\\b|\\bespantos(o|a|os|as)\\b|\\bpesim(o|a|os|as)\\b",
+    "sugerencias": [
+      "solemne",
+      "imponente",
+      "temible",
+      "que inspira reverencia",
+      "tremendo"
+    ],
+    "nota": "En el siglo XVIII 'awful' significa 'que inspira temor reverente' (awe), no 'muy malo'."
+  },
+  {
+    "termino": "exquisite",
+    "en": "\\bexquisite(ly)?\\b",
+    "es": "\\bexquisit(o|a|os|as|amente)\\b",
+    "solo_es": true,
+    "sugerencias": [
+      "intenso",
+      "agudo",
+      "extremo",
+      "intensísimo",
+      "refinado (solo si es positivo)"
+    ],
+    "nota": "'Exquisite torments' son tormentos intensísimos, no tormentos 'deliciosos'."
+  },
+  {
+    "termino": "apprehension / apprehend",
+    "en": "\\bapprehen(d|ds|ded|sion|sions|sive)\\b",
+    "es": "\\baprehen(der|de|den|dio|sion|siones|sivo)\\b|\\baprension\\b",
+    "solo_es": true,
+    "sugerencias": [
+      "comprensión",
+      "percepción",
+      "concepto",
+      "comprender",
+      "percibir",
+      "temor (si es miedo)"
+    ],
+    "nota": "En Edwards 'apprehension' es casi siempre la comprensión o percepción de algo en la mente."
+  },
+  {
+    "termino": "ingenuous",
+    "en": "\\bingenuous(ly|ness)?\\b",
+    "es": "\\bingenu(o|a|os|as|amente|idad)\\b",
+    "solo_es": true,
+    "sugerencias": [
+      "sincero",
+      "franco",
+      "noble",
+      "honesto",
+      "sincero de corazón"
+    ],
+    "nota": "'Ingenuous' (siglo XVIII) significa noble, sincero; 'ingenuo' en español es 'crédulo'."
+  },
+  {
+    "termino": "candid",
+    "en": "\\bcandid(ly|or)?\\b",
+    "es": "\\bcandid(o|a|os|as|amente)\\b|\\bcandor\\b",
+    "solo_es": true,
+    "sugerencias": [
+      "imparcial",
+      "franco",
+      "justo",
+      "sin prejuicios",
+      "benévolo"
+    ],
+    "nota": "'Candid' en inglés antiguo es 'imparcial, benévolo'; 'cándido' en español es 'inocente, ingenuo'."
+  },
+  {
+    "termino": "solicitous",
+    "en": "\\bsolicitous(ly|ness)?\\b|\\bsolicitude\\b",
+    "es": "\\bsolicit(o|a|os|as)\\b",
+    "sugerencias": [
+      "preocupado",
+      "ansioso",
+      "inquieto",
+      "deseoso",
+      "cuidado / preocupación"
+    ],
+    "nota": "'Solicitous' es 'preocupado, ansioso por'; 'solícito' es 'servicial'."
+  },
+  {
+    "termino": "realize",
+    "en": "\\brealiz(e|es|ed|ing)\\b",
+    "es": "\\breali(zar|za|zan|zo|zado|zada|zando)\\b",
+    "sugerencias": [
+      "darse cuenta",
+      "comprender",
+      "percibir vivamente",
+      "tener presente"
+    ],
+    "nota": "'Realize' casi nunca es 'realizar' (llevar a cabo)."
+  },
+  {
+    "termino": "eventually",
+    "en": "\\beventual(ly)?\\b",
+    "es": "\\beventual(es|mente)?\\b",
+    "solo_es": true,
+    "sugerencias": [
+      "finalmente",
+      "al final",
+      "con el tiempo"
+    ],
+    "nota": "'Eventualmente' significa 'quizá, ocasionalmente'."
+  },
+  {
+    "termino": "divines",
+    "en": "\\bdivines\\b|\\ba divine\\b|\\bthe divine,\\b",
+    "es": "\\b(los|unos|algunos|muchos|nuestros) divinos\\b|\\bun divino\\b",
+    "solo_es": true,
+    "sugerencias": [
+      "teólogos",
+      "un teólogo",
+      "ministros"
+    ],
+    "nota": "'Divines' (sustantivo) son teólogos."
+  },
+  {
+    "termino": "frame (of mind / of heart)",
+    "en": "\\bframe(s)?\\b",
+    "es": "\\bmarco(s)?\\b",
+    "sugerencias": [
+      "disposición",
+      "estado de ánimo",
+      "condición del alma",
+      "temple"
+    ],
+    "nota": "'A holy frame' es una disposición santa, no un 'marco'."
+  },
+  {
+    "termino": "comfortable",
+    "en": "\\bcomfortabl(e|y)\\b",
+    "es": "\\bconfortable(s|mente)?\\b|\\bcomod(o|a|os|as|amente)\\b",
+    "sugerencias": [
+      "consolador",
+      "reconfortante",
+      "lleno de consuelo",
+      "consolado"
+    ],
+    "nota": "En textos puritanos 'comfortable' se relaciona con el consuelo (comfort), no con la comodidad física."
+  },
+  {
+    "termino": "quicken",
+    "en": "\\bquicken(s|ed|ing|eth)?\\b",
+    "es": "\\bacelera(r|do|da|n|ba)?\\b|\\bapresura(r|do|da|n)?\\b",
+    "sugerencias": [
+      "vivificar",
+      "dar vida",
+      "avivar"
+    ],
+    "nota": "'Quicken' en la Biblia y en los puritanos es 'vivificar' (RV1960)."
+  },
+  {
+    "termino": "improve / improvement",
+    "en": "\\bimprov(e|es|ed|ing|ement)\\b",
+    "es": "\\bmejora(r|miento|s)?\\b|\\bmejoramiento\\b",
+    "sugerencias": [
+      "aprovechar (improve time → aprovechar el tiempo)",
+      "aplicación (encabezado IMPROVEMENT)",
+      "hacer buen uso",
+      "usar"
+    ],
+    "nota": "Como encabezado de sermón 'IMPROVEMENT' es la 'APLICACIÓN'. 'Improve a mercy / an opportunity' es 'aprovechar'."
+  },
+  {
+    "termino": "abroad",
+    "en": "\\babroad\\b",
+    "es": "\\bextranjero\\b|\\bexterior\\b",
+    "sugerencias": [
+      "por todas partes",
+      "ampliamente",
+      "fuera",
+      "en derredor"
+    ],
+    "nota": "'Shed abroad', 'spread abroad' = derramado, extendido por todas partes."
+  },
+  {
+    "termino": "discover",
+    "en": "\\bdiscover(s|ed|ing|y)?\\b",
+    "es": "\\bdescubr(e|en|ir|io|ieron|imiento)\\b",
+    "sugerencias": [
+      "manifestar",
+      "revelar",
+      "mostrar",
+      "dar a conocer",
+      "descubrir (si realmente es hallar)"
+    ],
+    "nota": "En el siglo XVIII 'discover' frecuentemente significa 'manifestar, revelar'. Revisar el contexto."
+  },
+  {
+    "termino": "pretend / pretence",
+    "en": "\\bpretend(s|ed|ing)?\\b|\\bpreten(ce|se|sion|sions)\\b",
+    "es": "\\bpretend(e|en|er|ia|ido|iendo)\\b",
+    "sugerencias": [
+      "afirmar",
+      "alegar",
+      "presumir de",
+      "aspirar a",
+      "fingir (solo si es simular)"
+    ],
+    "nota": "'Pretend to' en el inglés antiguo es 'afirmar, alegar, presumir de'."
+  },
+  {
+    "termino": "fond (archaic)",
+    "en": "\\bfond(ly|ness)?\\b",
+    "es": "\\bcariñ(o|osa|oso|osamente)\\b",
+    "sugerencias": [
+      "necio",
+      "insensato",
+      "aficionado a",
+      "apegado a"
+    ],
+    "nota": "En el inglés antiguo 'fond' puede significar 'necio'. 'Fond of' = 'apegado a'. Revisar contexto."
+  },
+  {
+    "termino": "earnest (of the Spirit)",
+    "en": "\\bearnest\\b",
+    "es": "\\bseri(o|a|os|as|amente)\\b",
+    "sugerencias": [
+      "arras (the earnest of the Spirit → las arras del Espíritu, RV1960)",
+      "ferviente",
+      "fervoroso",
+      "encarecido"
+    ],
+    "nota": "'Earnest' como sustantivo es 'arras, garantía'; como adjetivo es 'ferviente'. 'Serio' casi nunca es la mejor opción."
+  },
+  {
+    "termino": "suffer (KJV = permitir)",
+    "en": "\\bsuffer(s|ed|eth)? (me|us|him|her|them|it|the|not)\\b",
+    "es": "\\bsufr(e|en|ir|io|ieron|amos|as)\\b",
+    "sugerencias": [
+      "permitir",
+      "dejar",
+      "sufrir (solo si es padecer)"
+    ],
+    "nota": "'Suffer the little children' = 'dejad a los niños'. Revisar si 'suffer' significa 'permitir'."
+  },
+  {
+    "termino": "want (archaic = falta)",
+    "en": "\\bwant of\\b|\\bwanting\\b|\\bwant(s)? (nothing|no)\\b",
+    "es": "\\bdeseo de\\b|\\bquerer\\b|\\bquiere(n)?\\b",
+    "sugerencias": [
+      "falta de",
+      "carencia de",
+      "carecer",
+      "faltar"
+    ],
+    "nota": "'For want of' = 'por falta de'. 'Wanting' = 'deficiente, que falta'."
+  },
+  {
+    "termino": "affections",
+    "en": "\\baffections?\\b",
+    "es": "\\bafecci(o|on|ones)\\b",
+    "solo_es": true,
+    "sugerencias": [
+      "afectos",
+      "afectos religiosos",
+      "inclinaciones del corazón"
+    ],
+    "nota": "En Edwards 'affections' son los afectos (Religious Affections = Los afectos religiosos). 'Afección' en español es una enfermedad."
+  },
+  {
+    "termino": "signal (adj.)",
+    "en": "\\bsignal(ly)? (mercy|mercies|favour|favor|manner|instance|blessing|judgment|judgments|deliverance)\\b",
+    "es": "\\bse(n|ñ)al(es)? de\\b",
+    "sugerencias": [
+      "señalado",
+      "notable",
+      "insigne",
+      "notablemente"
+    ],
+    "nota": "'A signal mercy' es una misericordia señalada o notable."
+  }
+]
