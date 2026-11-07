@@ -509,7 +509,7 @@ function vacia(tag, attrs, sangria = 4) {
   if (una.length <= 80) return una;
   return `${pad}<${tag}\n${attrs.map(([k, v]) => `${pad}  ${k}="${v}"`).join("\n")}\n${pad}/>`;
 }
-const nombreArchivo = (titulo) => titulo.replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, " ").trim() + ".html";
+const nombreArchivo = (titulo) => titulo.replace(/[\\/:*?"<>|¿¡]/g, "").replace(/\s+/g, " ").trim() + ".html";
 
 function generarHTML(d) {
   const P = d.prefijo;

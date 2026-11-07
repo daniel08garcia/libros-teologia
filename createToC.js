@@ -25,13 +25,26 @@ function isRoman(num) {
   return /^[IVXLCDM]+$/.test(num);
 }
 
+// Author folders that hold books by several authors. In these folders the
+// index also shows each sermon's author (data-author).
+const COLLECTION_FOLDERS = ["Varios Autores"];
+
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 // Function to extract metadata from an HTML file using jsdom
 async function extractMetadata(filePath) {
   const htmlContent = fs.readFileSync(filePath, "utf8");
   const dom = new JSDOM(htmlContent);
   const headElement = dom.window.document.querySelector("head");
   const sermonId = headElement.dataset.sermonId || "undefined";
-  return sermonId;
+  const author = headElement.dataset.author || "";
+  return { sermonId, author };
 }
 
 // Function to recursively read directory and create a nested structure
@@ -42,16 +55,23 @@ async function readDirectory(dir, baseDir) {
     if (entry.isDirectory()) {
       const subDirectoryStructure = await readDirectory(
         path.join(dir, entry.name),
-        baseDir
+        baseDir,
       );
       structure.children.push(subDirectoryStructure);
     } else if (entry.isFile() && path.extname(entry.name) === ".html") {
+      const relativePath = path.relative(baseDir, path.join(dir, entry.name));
+      const { sermonId, author } = await extractMetadata(
+        path.join(dir, entry.name),
+      );
+      // relativePath is "<siglo>/<autor>/..."; the second part is the author folder
+      const authorFolder = relativePath.split(path.sep)[1];
       const fileInfo = {
         type: "file",
         name: entry.name,
         path: path.join(dir, entry.name),
-        relativePath: path.relative(baseDir, path.join(dir, entry.name)),
-        sermonId: await extractMetadata(path.join(dir, entry.name)),
+        relativePath,
+        sermonId,
+        author: COLLECTION_FOLDERS.includes(authorFolder) ? author : "",
       };
       structure.children.push(fileInfo);
     }
@@ -102,7 +122,10 @@ function generateHTMLList(structure) {
       .join("");
     return `<li>${structure.name}<ul>${content}</ul></li>`;
   } else if (structure.type === "file" && structure.sermonId !== "undefined") {
-    return `<li><a href="siglo/${structure.relativePath}"> <b class="sermon-id-index"> Sermon:${structure.sermonId} </b>  ${structure.name} </a></li>`;
+    const author = structure.author
+      ? ` <i class="sermon-author-index">${escapeHtml(structure.author)}</i> &ndash;`
+      : "";
+    return `<li><a href="siglo/${structure.relativePath}"> <b class="sermon-id-index"> Sermon:${structure.sermonId} </b>${author}  ${structure.name} </a></li>`;
   }
   return "";
 }

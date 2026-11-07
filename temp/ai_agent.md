@@ -13,6 +13,17 @@ Lee temp/ai_agent.md y procesa este original:
   fecha:    1834-01-01
 ```
 
+Para un libro de varios autores (ver la sección 4.1):
+
+```
+Lee temp/ai_agent.md y procesa este original:
+  original: temp/originales/cripplegate-vol1.txt
+  modo:     --multiple
+  destino:  siglo/XVII/Varios Autores/Ejercicios Matutinos de Cripplegate/Volumen I
+  autor:    varios
+  fecha:    1844-01-01
+```
+
 ---
 
 ## 1. Resumen del flujo y modelos
@@ -48,14 +59,14 @@ Usa la herramienta `Agent` con `model: "sonnet"` (o `"haiku"`) y `effort: "low"`
 
 ## 2. Parámetros de entrada
 
-| Parámetro              | Obligatorio | Descripción                                                                                                                   |
-| ---------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `original`             | Sí          | Archivo en inglés: `.txt`, `.md` o `.html`. Los párrafos van separados por líneas en blanco.                                  |
-| `--uno` / `--multiple` | Sí          | `--uno` (por defecto): el archivo contiene un solo sermón. `--multiple`: contiene varios sermones o capítulos.                |
-| `destino`              | Sí          | Carpeta dentro de `siglo/` donde van los HTML, p. ej. `siglo/XVIII/Jonathan Edwards/The Works of Jonathan Edwards/Volumen 2`. |
-| `autor`                | Sí          | Nombre del autor tal como aparece en la carpeta, p. ej. `Jonathan Edwards`.                                                   |
-| `fecha`                | No          | Fecha de publicación o predicación, `AAAA-MM-DD`. Si no se da, se omite el atributo.                                          |
-| `id inicial`           | No          | Si no se da, los ids continúan después del último que haya en la carpeta destino.                                             |
+| Parámetro              | Obligatorio | Descripción                                                                                                                        |
+| ---------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `original`             | Sí          | Archivo en inglés: `.txt`, `.md` o `.html`. Los párrafos van separados por líneas en blanco.                                       |
+| `--uno` / `--multiple` | Sí          | `--uno` (por defecto): el archivo contiene un solo sermón. `--multiple`: contiene varios sermones o capítulos.                     |
+| `destino`              | Sí          | Carpeta dentro de `siglo/` donde van los HTML, p. ej. `siglo/XVIII/Jonathan Edwards/The Works of Jonathan Edwards/Volumen 2`.      |
+| `autor`                | Sí          | Nombre del autor tal como aparece en la carpeta, p. ej. `Jonathan Edwards`. En un libro de varios autores: `varios` (sección 4.1). |
+| `fecha`                | No          | Fecha de publicación o predicación, `AAAA-MM-DD`. Si no se da, se omite el atributo.                                               |
+| `id inicial`           | No          | Si no se da, los ids continúan después del último que haya en la carpeta destino.                                                  |
 
 Si falta `destino` o `autor`, pregúntale al usuario **una sola vez**, antes de empezar. No inventes esos datos.
 
@@ -196,6 +207,22 @@ Entrega al usuario un resumen corto con lo siguiente:
 
 **No hagas commit ni borres la carpeta de trabajo** a menos que el usuario lo pida.
 
+### 4.1. Libros de varios autores (`autor: varios`)
+
+Algunas colecciones reúnen sermones de muchos predicadores. Por ejemplo, _Puritan Sermons 1659–1689: The Morning Exercises at Cripplegate_ tiene 6 volúmenes de unos 75 ministros. Estos libros **no se reparten** entre las carpetas de cada autor. Se publican juntos, en el orden del libro:
+
+```
+siglo/<siglo>/Varios Autores/<Título del libro en español>/Volumen I/<sermón>.html
+```
+
+- **Un volumen por corrida.** Cada volumen tiene su propio original, su propia carpeta de trabajo (`temp/trabajo/cripplegate-vol1/`) y su propio `destino`. Los ids empiezan en `I` en cada volumen y siguen el orden de los sermones dentro del volumen.
+- **El autor va en cada sermón.** En el Paso 4, deja `comun.autor` en `null` y llena `autor` en **cada** sermón del `manifiesto.json`. Tómalo del encabezado del sermón (normalmente una línea como `BY THE REV. THOMAS MANTON, D.D.`, que aparece en `encabezado_en` o en los primeros párrafos que imprime `unir`). Si falta en algún sermón, `html` se detiene y te lo dice.
+- **Cómo escribir el nombre:** sin títulos ni grados (`Rev.`, `D.D.`, `M.A.`), con mayúscula inicial y nombre de pila en inglés: `Thomas Manton`, `Richard Baxter`. Si el autor ya tiene carpeta en `siglo/` (p. ej. `William Bates`), escríbelo igual que esa carpeta. Usa siempre la misma forma para el mismo autor en todos los volúmenes.
+- **La línea del autor no va en el texto.** Igual que el título, la línea `BY THE REV. …` se omite del cuerpo. Súmala a `saltar_parrafos` (normalmente `2`: título + autor). Revisa con la salida de `html` que el versículo y el primer párrafo sean los correctos.
+- **El prompt del traductor** recibe en `{{autor}}` el autor de ese sermón, no `varios`.
+- **Títulos.** En esta colección, muchos títulos son preguntas (`How may we be universally and exactly conscientious?`). Tradúcelos como preguntas, con `¿…?`, y mayúscula en cada palabra, como en el resto del proyecto. En el **nombre del archivo** quita `¿`, `?` y cualquier carácter no válido en Windows (`\ / : * ? " < > |`). El `<title>` y el `<h1>` sí llevan los signos.
+- **Índice.** `createToC.js` muestra el autor de cada sermón cuando la carpeta de autor se llama `Varios Autores`. Si usas otro nombre de carpeta para una colección, agrégalo a `COLLECTION_FOLDERS` en `createToC.js`.
+
 ---
 
 ## 5. Prompt del agente traductor
@@ -293,18 +320,18 @@ Cuando termines, responde solamente: OK {{clave}} <número de correcciones>
 
 ## 7. Referencia de comandos
 
-| Comando                                                                           | Qué hace                                                                                                                                           |
-| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `candidatos <original>`                                                           | Lista las líneas que parecen encabezados, con su número de línea, para decidir los cortes con `--multiple`.                                        |
-| `dividir <original> <trabajo> [--multiple] [--patron re] [--max 6000] [--forzar]` | Crea el manifiesto y los fragmentos `.en.txt`.                                                                                                     |
-| `estado <trabajo>`                                                                | Muestra el avance y las claves por traducir y por revisar.                                                                                         |
-| `revisar <trabajo> [clave…]`                                                      | Compara inglés y español y escribe `<clave>.revision.json`.                                                                                        |
-| `aplicar <trabajo> [clave…]`                                                      | Aplica `<clave>.correcciones.json`, revalida y marca el fragmento como revisado.                                                                   |
-| `unir <trabajo>`                                                                  | Junta los fragmentos de cada sermón en `sermones/sNN.es.txt`.                                                                                      |
-| `html <trabajo> [--solo s01] [--sobrescribir] [--salida dir]`                     | Genera los HTML del proyecto con los ids, las rutas `../`, los acentos como entidades y el ajuste a 80 columnas.                                   |
-| `validar <carpeta o archivo> [--recursivo]`                                       | Revisa el formato, la numeración y la separación. Termina con código 1 si hay errores.                                                             |
+| Comando                                                                           | Qué hace                                                                                                                                                                                                      |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `candidatos <original>`                                                           | Lista las líneas que parecen encabezados, con su número de línea, para decidir los cortes con `--multiple`.                                                                                                   |
+| `dividir <original> <trabajo> [--multiple] [--patron re] [--max 6000] [--forzar]` | Crea el manifiesto y los fragmentos `.en.txt`.                                                                                                                                                                |
+| `estado <trabajo>`                                                                | Muestra el avance y las claves por traducir y por revisar.                                                                                                                                                    |
+| `revisar <trabajo> [clave…]`                                                      | Compara inglés y español y escribe `<clave>.revision.json`.                                                                                                                                                   |
+| `aplicar <trabajo> [clave…]`                                                      | Aplica `<clave>.correcciones.json`, revalida y marca el fragmento como revisado.                                                                                                                              |
+| `unir <trabajo>`                                                                  | Junta los fragmentos de cada sermón en `sermones/sNN.es.txt`.                                                                                                                                                 |
+| `html <trabajo> [--solo s01] [--sobrescribir] [--salida dir]`                     | Genera los HTML del proyecto con los ids, las rutas `../`, los acentos como entidades y el ajuste a 80 columnas.                                                                                              |
+| `validar <carpeta o archivo> [--recursivo]`                                       | Revisa el formato, la numeración y la separación. Termina con código 1 si hay errores.                                                                                                                        |
 | `escanear <carpeta o archivo> [--todo] [--json casos.json]`                       | Busca falsos cognados en traducciones ya publicadas. Sin el inglés al lado, solo usa los términos de alta precisión, a menos que se pase `--todo`. Con `--json` exporta cada caso con su contexto en español. |
-| `corregir <decisiones.json> [--simular]`                                          | Aplica decisiones `{"archivo", "buscar", "reemplazar"}` directamente en los HTML publicados. Encuentra el texto aunque tenga entidades (`&aacute;`) o saltos de línea. |
+| `corregir <decisiones.json> [--simular]`                                          | Aplica decisiones `{"archivo", "buscar", "reemplazar"}` directamente en los HTML publicados. Encuentra el texto aunque tenga entidades (`&aacute;`) o saltos de línea.                                        |
 
 ### Revisar traducciones ya publicadas (sin el original en inglés)
 
