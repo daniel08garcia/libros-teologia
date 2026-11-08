@@ -17,11 +17,11 @@ Para un libro de varios autores (ver la sección 4.1):
 
 ```
 Lee temp/ai_agent.md y procesa este original:
-  original: temp/originales/cripplegate-vol1.txt
+  original: temp/originales/PURITAN SERMONS - VOL. 1 - Various Puritans.txt
   modo:     --multiple
-  destino:  siglo/XVII/Varios Autores/Ejercicios Matutinos de Cripplegate/Volumen I
+  destino:  (por serie; ver la sección 4.1)
   autor:    varios
-  fecha:    1844-01-01
+  fecha:    (por serie; ver la sección 4.1)
 ```
 
 ---
@@ -209,19 +209,35 @@ Entrega al usuario un resumen corto con lo siguiente:
 
 ### 4.1. Libros de varios autores (`autor: varios`)
 
-Algunas colecciones reúnen sermones de muchos predicadores. Por ejemplo, _Puritan Sermons 1659–1689: The Morning Exercises at Cripplegate_ tiene 6 volúmenes de unos 75 ministros. Estos libros **no se reparten** entre las carpetas de cada autor. Se publican juntos, en el orden del libro:
+Algunas colecciones reúnen sermones de muchos predicadores. Estos libros **no se reparten** entre las carpetas de cada autor: se publican juntos, en el orden del libro, dentro de `siglo/<siglo>/Varios Autores/<Título del libro en español>/`.
 
-```
-siglo/<siglo>/Varios Autores/<Título del libro en español>/Volumen I/<sermón>.html
-```
-
-- **Un volumen por corrida.** Cada volumen tiene su propio original, su propia carpeta de trabajo (`temp/trabajo/cripplegate-vol1/`) y su propio `destino`. Los ids empiezan en `I` en cada volumen y siguen el orden de los sermones dentro del volumen.
-- **El autor va en cada sermón.** En el Paso 4, deja `comun.autor` en `null` y llena `autor` en **cada** sermón del `manifiesto.json`. Tómalo del encabezado del sermón (normalmente una línea como `BY THE REV. THOMAS MANTON, D.D.`, que aparece en `encabezado_en` o en los primeros párrafos que imprime `unir`). Si falta en algún sermón, `html` se detiene y te lo dice.
-- **Cómo escribir el nombre:** sin títulos ni grados (`Rev.`, `D.D.`, `M.A.`), con mayúscula inicial y nombre de pila en inglés: `Thomas Manton`, `Richard Baxter`. Si el autor ya tiene carpeta en `siglo/` (p. ej. `William Bates`), escríbelo igual que esa carpeta. Usa siempre la misma forma para el mismo autor en todos los volúmenes.
-- **La línea del autor no va en el texto.** Igual que el título, la línea `BY THE REV. …` se omite del cuerpo. Súmala a `saltar_parrafos` (normalmente `2`: título + autor). Revisa con la salida de `html` que el versículo y el primer párrafo sean los correctos.
+- **Una carpeta por serie original, no por volumen.** Si el libro reúne varias obras originales, cada una con su propia numeración y su propio año, crea una carpeta por obra. Ponle un número al inicio para que el índice respete el orden del libro, y el año al final: `1 El Ejercicio Matutino De Cripplegate (1661)`. Una serie puede empezar en un volumen y seguir en el siguiente, pero va en la misma carpeta.
+- **Ids = número del sermón en el libro.** `SERM. 6.` lleva el id `VI`. Los prefacios llevan el id `0`: van antes del sermón I y el índice los muestra como "Prefacio". Si una serie tiene dos prefacios (por ejemplo, una dedicatoria y un prefacio al lector), únelos en un solo archivo antes de dividir. Para eso, quita la línea de encabezado del segundo para que no se corte ahí.
+- **Un volumen por carpeta de trabajo.** Cada volumen tiene su propio original y su propia carpeta de trabajo (`temp/trabajo/<libro>-vol1/`). Como un volumen puede tener más de una serie, `destino`, `fecha` e `id` se llenan **en cada sermón**, no en `comun`.
+- **El autor va en cada sermón.** Deja `comun.autor` en `null` y llena `autor` en **cada** sermón del `manifiesto.json`. Tómalo del encabezado del sermón (por ejemplo, `… - REV. THOMAS MANTON`). Si falta en algún sermón, `html` lo salta y te lo dice. En los prefacios, usa la firma que aparece al final.
+- **Cómo escribir el nombre:** sin títulos ni grados (`Rev.`, `D.D.`, `M.A.`), con mayúscula inicial y el nombre de pila en inglés: `Thomas Manton`, `Richard Baxter`. Si el autor ya tiene carpeta en `siglo/` (p. ej. `William Bates`), escríbelo igual que esa carpeta. Usa siempre la misma forma para el mismo autor.
 - **El prompt del traductor** recibe en `{{autor}}` el autor de ese sermón, no `varios`.
-- **Títulos.** En esta colección, muchos títulos son preguntas (`How may we be universally and exactly conscientious?`). Tradúcelos como preguntas, con `¿…?`, y mayúscula en cada palabra, como en el resto del proyecto. En el **nombre del archivo** quita `¿`, `?` y cualquier carácter no válido en Windows (`\ / : * ? " < > |`). El `<title>` y el `<h1>` sí llevan los signos.
+- **Títulos.** Muchos títulos son preguntas (`How may we be universally and exactly conscientious?`). Tradúcelos como preguntas, con `¿…?`, y con mayúscula en cada palabra, como en el resto del proyecto. El nombre del archivo se genera sin `¿ ? ¡` ni los caracteres no válidos en Windows (` / : * " < > |`). El `<title>` y el `<h1>` sí llevan los signos.
+- **Versículo unido.** Si el texto bíblico viene en un solo párrafo con la forma `texto del versículo.— Referencia.`, usa `"versiculo": "unido"`. Así `html` separa el texto y la referencia en el `<blockquote>`. El traductor debe conservar esa forma.
 - **Índice.** `createToC.js` muestra el autor de cada sermón cuando la carpeta de autor se llama `Varios Autores`. Si usas otro nombre de carpeta para una colección, agrégalo a `COLLECTION_FOLDERS` en `createToC.js`.
+
+**Ejemplo: _Puritan Sermons 1659–1689: The Morning Exercises at Cripplegate_** (6 volúmenes, 161 sermones, 75 autores). El script `temp/trabajo/cripplegate-preparar.js` llena los manifiestos de `temp/trabajo/cripplegate-vol1` a `-vol6`: serie, destino, fecha, id, autor, título original y versículo. Los originales se recortaron antes de dividir: se quitó el índice del inicio y se unieron los dos prefacios de las series 5 y 6. Se divide con `--multiple --patron "^(SERM|PREF). ?[0-9]*.? "`. El prefacio del editor (Nichols, 1844) va con `"omitir": true`.
+
+Herramientas de esta obra, todas en `temp/trabajo/`:
+
+- `cripplegate-traductor.md` y `cripplegate-revisor.md`: las instrucciones de los agentes. El prompt de cada agente solo dice "Lee y sigue las instrucciones de …", la carpeta y la lista de fragmentos. Así cada lanzamiento cuesta poco contexto al orquestador.
+- `cripplegate-lotes.js <serie> [--revisar]`: lista los lotes pendientes, de hasta 4 fragmentos seguidos del mismo sermón para traducir y de 5 a 8 para revisar. Claude Code permite como máximo 20 agentes a la vez.
+- `cripplegate-filtrar-citas.js <trabajo>`: se ejecuta **antes de `aplicar`**. Separa las correcciones que solo acercan una cita a la RV1960 de memoria, porque los revisores sin la Biblia a la vista cometían errores (por ejemplo, "Aminadib" o "No será yo avergonzado"). Las guarda en `<clave>.correcciones.citas-descartadas.json`.
+- `cripplegate-lotes-revision.js <serie> [--max 15] [--parrafos 110]`: agrupa en lotes para el revisor los fragmentos con `.revision.json` y sin `.correcciones.json`, solo de sermones ya traducidos por completo. Ojo: también incluye fragmentos cuyo revisor sigue trabajando; con revisores en curso hay que restar a mano las claves ya lanzadas.
+- `cripplegate-titulos.js <serie> [--simular]`: después de `unir`, pone `titulo` en los manifiestos a partir del encabezado traducido (quita "SERM. N." y "- REV. NOMBRE" y pone mayúscula inicial en cada palabra). Los títulos corregidos a mano van en `AJUSTES` ("volN/sNN"). Si cambias un título después de generar el HTML, borra el archivo viejo, porque el nombre cambia.
+- Antes de `html`, en los prefacios con dos partes (series 2, 5 y 6) se marca el segundo encabezado con `## ` directamente en `sermones/sNN.es.txt`.
+- Al final de cada serie: limpieza "de el"/"a el" → "del"/"al" solo en los fragmentos de esa serie, y búsqueda de falsos cognados que los revisores tienden a aceptar (ingenuo, graciosa, pretender).
+
+Lecciones de la serie 1:
+
+- El revisor tiende a "corregir" citas bíblicas de memoria. Su instrucción ahora lo prohíbe: solo corrige una cita si cambia el sentido.
+- Los nombres de archivo largos se cortan solos con " ---" (máximo 70 caracteres), como en el resto del proyecto, para no pasar el límite de rutas de Windows.
+- `"versiculo": "unido"` corta en el último guion seguido de espacio. Así "Heb. 6:4—6" queda completo.
 
 ---
 
@@ -250,6 +266,7 @@ ESTILO:
 - Español neutro, formal y fluido, fiel al sentido. No resumas ni omitas nada, aunque parezca repetitivo.
 - Cuando el predicador se dirige a la congregación: "you" plural → "ustedes"; "thou" → "tú".
 - Citas bíblicas: usa la Reina-Valera 1960 cuando la cita sea reconocible (ahí sí se usa "vosotros"). Si el autor parafrasea, traduce la paráfrasis.
+- Excepción: si el predicador explica las palabras del versículo una por una (por ejemplo, el texto del sermón), y la RV1960 usa otras palabras, traduce el inglés de forma literal. Así el versículo coincide con la explicación. Ejemplo: Job 33:23 "a messenger with him, an interpreter, one among a thousand" se traduce "un mensajero, un intérprete, uno entre mil", no "algún elocuente mediador muy escogido".
 - Referencias bíblicas: traduce el libro y conserva los números como en el original. Por ejemplo: Matt. v. 8. → Mat. v. 8.; Psal. → Sal.; Gen. → Gén.; Exod. → Éx.; Rev. → Apoc.; Acts → Hch.; John → Juan; James → Sant.; 1 Pet. → 1 Ped.; Eccl. → Ecl.
 - Términos: the gospel → el evangelio; natural men → hombres naturales; the saints → los santos; awakened → despertados; ordinances → ordenanzas; means of grace → medios de gracia; the elect → los elegidos; Sabbath → día de reposo; divines → teólogos.
 - Presta atención a los términos con varias interpretaciones y elige la más adecuada al contexto teológico y al inglés del siglo XVIII. Evita los falsos cognados:

@@ -348,7 +348,8 @@ function revisarPar(enT, esT, glos) {
   es.forEach((p, i) => {
     const n = i + 1;
     if (pareceIngles(p)) E.push({ tipo: "sin_traducir", parrafo: n, detalle: `Posible texto en inglés: ${p.slice(0, 120)}` });
-    if (RE_AGREGADO.test(p)) E.push({ tipo: "agregado", parrafo: n, detalle: `Texto que no es traducción: ${p.slice(0, 120)}` });
+    // "Here is the case:" en el original se traduce "Aquí está el caso:": no es texto agregado
+    if (RE_AGREGADO.test(p) && !(iguales && /^(here(in)? (is|are|lies)|translation)/i.test(en[i]))) E.push({ tipo: "agregado", parrafo: n, detalle: `Texto que no es traducción: ${p.slice(0, 120)}` });
     if (RE_FORMATO.test(p)) E.push({ tipo: "formato", parrafo: n, detalle: `Formato markdown/listas no permitido: ${p.slice(0, 80)}` });
     if (iguales) {
       const ne = numeracion(en[i]), ns = numeracion(p);
@@ -509,7 +510,15 @@ function vacia(tag, attrs, sangria = 4) {
   if (una.length <= 80) return una;
   return `${pad}<${tag}\n${attrs.map(([k, v]) => `${pad}  ${k}="${v}"`).join("\n")}\n${pad}/>`;
 }
-const nombreArchivo = (titulo) => titulo.replace(/[\\/:*?"<>|¿¡]/g, "").replace(/\s+/g, " ").trim() + ".html";
+// Los títulos largos se cortan en una palabra y terminan en " ---", como en el resto
+// del proyecto ("Las Advertencias De La Escritura Están Mejor Adaptadas Para ---.html").
+// Así la ruta completa no pasa el límite de 260 caracteres de Windows.
+const MAX_NOMBRE = 70;
+const nombreArchivo = (titulo) => {
+  let t = titulo.replace(/[\\/:*?"<>|¿¡]/g, "").replace(/\s+/g, " ").trim();
+  if (t.length > MAX_NOMBRE) t = t.slice(0, MAX_NOMBRE + 1).replace(/\s+\S*$/, "").replace(/[\s,;:.]+$/, "") + " ---";
+  return t + ".html";
+};
 
 function generarHTML(d) {
   const P = d.prefijo;
@@ -578,6 +587,13 @@ function cmdHtml(a) {
     if (d.versiculo === "auto") {
       versiculo = { referencia: cuerpo[0], texto: cuerpo[1] };
       cuerpo = cuerpo.slice(2);
+    } else if (d.versiculo === "unido") {
+      // Un solo párrafo "texto del versículo.— Referencia." (formato de Puritan Sermons).
+      // Se corta en el último guion seguido de espacio: "texto.— Heb. 6:4—6." (el guion del rango no lleva espacio).
+      const m = (cuerpo[0] || "").match(/^(.*\S)\s*[—–]\s+(\S.*)$/s) || (cuerpo[0] || "").match(/^(.*\S)\s*[—–]\s*([^—–]+)$/s);
+      if (!m) { console.log(`${s.clave}: versiculo "unido" pero el primer párrafo no termina en "— Referencia": ${(cuerpo[0] || "").slice(0, 80)}`); continue; }
+      versiculo = { texto: m[1].trim(), referencia: m[2].trim() };
+      cuerpo = cuerpo.slice(1);
     } else if (d.versiculo && d.versiculo.texto) versiculo = d.versiculo;
     const destinoAbs = path.resolve(RAIZ, d.destino);
     const rel = path.relative(RAIZ, destinoAbs);
@@ -598,7 +614,7 @@ function cmdHtml(a) {
       d.id = aRomano((usados.length ? Math.max(...usados) : 0) + 1);
       s.id = d.id;
     }
-    if (isNaN(deRomano(d.id))) { console.log(`${s.clave}: id "${d.id}" no es un número romano válido`); continue; }
+    if (d.id !== "0" && isNaN(deRomano(d.id))) { console.log(`${s.clave}: id "${d.id}" no es un número romano válido`); continue; }
     reservados.set(destinoAbs, [...(reservados.get(destinoAbs) || []), deRomano(d.id)]);
     if (existe(pf) && !a.sobrescribir) {
       const previo = (leer(pf).match(/data-sermon-id="([^"]*)"/) || [])[1];
@@ -641,6 +657,7 @@ function validarArchivo(archivo, JSDOM) {
   const ds = head.dataset;
   const id = ds.sermonId;
   if (!id) E.push("falta data-sermon-id (no aparecerá en el índice)");
+  else if (id === "0") {} // id 0 = prefacio o introducción; va antes del sermón I
   else if (/^\d+$/.test(id)) A.push(`data-sermon-id="${id}" usa números arábigos; el proyecto usa romanos (${aRomano(+id)})`);
   else if (isNaN(deRomano(id))) E.push(`data-sermon-id="${id}" no es un número romano válido`);
   for (const k of ["sermonTitle", "sermonTitleOriginal", "author"])
@@ -733,7 +750,7 @@ function cmdValidar(a) {
     const msgs = [];
     for (const [n, fs_] of vistos) if (fs_.length > 1) msgs.push(`ERROR  id ${aRomano(n)} repetido: ${fs_.join(" | ")}`);
     // Los ids arábigos (p. ej. Spurgeon) son números del original y no tienen que ser consecutivos.
-    if (nums.length && nums.every((x) => !/^\d+$/.test(x.id))) {
+    if (nums.length && nums.every((x) => x.id === "0" || !/^\d+$/.test(x.id))) {
       const max = Math.max(...nums.map((x) => x.n));
       const faltan = [];
       for (let i = 1; i <= max; i++) if (!vistos.has(i)) faltan.push(aRomano(i));

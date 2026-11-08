@@ -125,7 +125,10 @@ function generateHTMLList(structure) {
     const author = structure.author
       ? ` <i class="sermon-author-index">${escapeHtml(structure.author)}</i> &ndash;`
       : "";
-    return `<li><a href="siglo/${structure.relativePath}"> <b class="sermon-id-index"> Sermon:${structure.sermonId} </b>${author}  ${structure.name} </a></li>`;
+    // id 0 = preface or introduction placed before sermon I
+    const label =
+      structure.sermonId === "0" ? "Prefacio" : `Sermon:${structure.sermonId}`;
+    return `<li><a href="siglo/${structure.relativePath}"> <b class="sermon-id-index"> ${label} </b>${author}  ${structure.name} </a></li>`;
   }
   return "";
 }
