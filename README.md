@@ -214,12 +214,20 @@ Reglas para mantener el archivo exportable:
 
 ### Paso 6: Actualizar el índice
 
-El archivo `index.html` se genera automáticamente con todos los archivos que tengan `data-sermon-id`:
+El archivo `index.html` se genera automáticamente con todos los archivos que tengan `data-sermon-id`. Los siglos, autores y obras salen de las carpetas y de los datos del `<head>`, así que no hay que editar nada a mano:
 
 ```bash
 npm install          # solo la primera vez (instala jsdom)
 node createToC.js    # regenera index.html
 ```
+
+El diseño del índice está en la carpeta `indice/` (`plantilla.html`, `indice.css` e `indice.js`). En `indice/autores.json` se agregan, si se desea, datos que no están en los archivos:
+
+- `autores`: nombre para mostrar, años de vida y color de portada de cada carpeta de autor. Un autor que no esté aquí aparece igual, sin años de vida y con un color automático. `"coleccion": true` marca una carpeta con obras de varios autores (como `Varios Autores`); en ella el índice muestra el autor de cada texto.
+- `series`: traducción del nombre de una carpeta de serie (por ejemplo `The Works of Jonathan Edwards`).
+- `obras`: título o número de volumen de una carpeta concreta, con su ruta desde la carpeta del autor.
+
+Cada obra tiene un enlace directo a su ficha, por ejemplo `index.html#obra-jonathan-edwards-las-obras-de-jonathan-edwards-vol-2-sermones-y-discursos`.
 
 Opcionalmente, formatea los archivos con [Prettier](https://prettier.io/) para que los cambios sean fáciles de revisar:
 

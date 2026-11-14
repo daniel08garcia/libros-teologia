@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nube de Testigos</title>
+    <meta
+      name="description"
+      content="Obras clásicas de la fe cristiana —padres de la Iglesia, doctores, reformadores y puritanos— traducidas al español."
+    />
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Cormorant+SC:wght@500;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      try {
+        const t = localStorage.getItem("tema");
+        if (t) document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+    <link rel="stylesheet" href="indice/indice.css" />
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="flor" viewBox="-12 -12 24 24">
+        <g
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1"
+          vector-effect="non-scaling-stroke"
+        >
+          <path d="M0 -1.5C-3.6 -4.6 -3 -9.4 0 -11C3 -9.4 3.6 -4.6 0 -1.5Z" />
+          <path
+            d="M0 -1.5C-3.6 -4.6 -3 -9.4 0 -11C3 -9.4 3.6 -4.6 0 -1.5Z"
+            transform="rotate(90)"
+          />
+          <path
+            d="M0 -1.5C-3.6 -4.6 -3 -9.4 0 -11C3 -9.4 3.6 -4.6 0 -1.5Z"
+            transform="rotate(180)"
+          />
+          <path
+            d="M0 -1.5C-3.6 -4.6 -3 -9.4 0 -11C3 -9.4 3.6 -4.6 0 -1.5Z"
+            transform="rotate(270)"
+          />
+          <path
+            d="M0 -5.5L1.3 -1.3L5.5 0L1.3 1.3L0 5.5L-1.3 1.3L-5.5 0L-1.3 -1.3Z"
+            transform="rotate(45) scale(1.15)"
+          />
+        </g>
+        <circle r="1.2" fill="currentColor" />
+      </symbol>
+      <symbol id="rosa-mini" viewBox="-14 -14 28 28">
+        <g
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1"
+          vector-effect="non-scaling-stroke"
+        >
+          <circle r="13" />
+          <circle r="4" />
+          <path d="M0 -4C-2.2 -6.5 -2 -10 0 -12.5C2 -10 2.2 -6.5 0 -4Z" />
+          <path
+            d="M0 -4C-2.2 -6.5 -2 -10 0 -12.5C2 -10 2.2 -6.5 0 -4Z"
+            transform="rotate(45)"
+          />
+          <path
+            d="M0 -4C-2.2 -6.5 -2 -10 0 -12.5C2 -10 2.2 -6.5 0 -4Z"
+            transform="rotate(90)"
+          />
+          <path
+            d="M0 -4C-2.2 -6.5 -2 -10 0 -12.5C2 -10 2.2 -6.5 0 -4Z"
+            transform="rotate(135)"
+          />
+          <path
+            d="M0 -4C-2.2 -6.5 -2 -10 0 -12.5C2 -10 2.2 -6.5 0 -4Z"
+            transform="rotate(180)"
+          />
+          <path
+            d="M0 -4C-2.2 -6.5 -2 -10 0 -12.5C2 -10 2.2 -6.5 0 -4Z"
+            transform="rotate(225)"
+          />
+          <path
+            d="M0 -4C-2.2 -6.5 -2 -10 0 -12.5C2 -10 2.2 -6.5 0 -4Z"
+            transform="rotate(270)"
+          />
+          <path
+            d="M0 -4C-2.2 -6.5 -2 -10 0 -12.5C2 -10 2.2 -6.5 0 -4Z"
+            transform="rotate(315)"
+          />
+        </g>
+      </symbol>
+    </svg>
+
+    <header class="top" id="top">
+      <div class="wrap">
+        <a class="marca" href="#inicio"
+          ><svg aria-hidden="true"><use href="#rosa-mini" /></svg>Nube de
+          Testigos</a
+        >
+        <nav aria-label="Principal">
+          <a class="lnk" href="#obras">obras</a>
+          <a class="lnk" href="#autores">autores</a>
+          <a class="lnk" href="#colofon">colofón</a>
+          <div class="acciones">
+            <button class="icon-btn" id="ir-buscar" aria-label="Buscar">
+              <svg class="ico" viewBox="0 0 24 24">
+                <circle cx="10.5" cy="10.5" r="6.5" />
+                <path d="M15.5 15.5L20 20" />
+              </svg>
+            </button>
+            <button
+              class="icon-btn"
+              id="tema"
+              aria-label="Cambiar entre modo claro y oscuro"
+            >
+              <svg class="ico" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="8" />
+                <path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor" />
+              </svg>
+            </button>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="inicio">
+        <div class="hero-fondo" aria-hidden="true">
+          <div class="rosa">
+            <div class="rosa-3d" id="rosa3d">
+              <div class="vitral"></div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-c">
+          <p class="kicker" id="kicker">
+            padres · doctores · reformadores · puritanos
+          </p>
+          <h1 class="titulo" id="titulo">
+            <span class="l l1">Nube de</span><span class="l l2">Testigos</span>
+          </h1>
+          <p class="sub">
+            Obras clásicas de la fe cristiana, de los padres de la Iglesia a los
+            reformadores, traducidas al español para su edificación.
+          </p>
+          <div class="orla" id="orla-hero">
+            <svg aria-hidden="true"><use href="#flor" /></svg>
+          </div>
+          <div class="buscar" role="search">
+            <label class="campo">
+              <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="10.5" cy="10.5" r="6.5" />
+                <path d="M15.5 15.5L20 20" />
+              </svg>
+              <span class="sr">Buscar en la biblioteca</span>
+              <input
+                id="q"
+                type="search"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="Buscar sermón, autor o tema…"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="resultados"
+                aria-autocomplete="list"
+              />
+              <kbd>/</kbd>
+            </label>
+            <div
+              class="resultados"
+              id="resultados"
+              role="listbox"
+              aria-label="Resultados"
+            ></div>
+          </div>
+          <div class="cifras" id="cifras"></div>
+        </div>
+        <div class="bajar" aria-hidden="true"></div>
+      </section>
+
+      <section class="bloque" id="obras">
+        <div class="wrap">
+          <header class="cab">
+            <span class="n">i</span>
+            <h2>Las <em>Obras</em></h2>
+            <p>
+              Tratados, sermones y colecciones de veinte siglos de fe, ordenados
+              por siglo.
+            </p>
+            <div class="orla">
+              <svg aria-hidden="true"><use href="#flor" /></svg>
+            </div>
+          </header>
+          <div
+            class="filtros"
+            id="filtros"
+            role="toolbar"
+            aria-label="Filtrar por siglo"
+          ></div>
+          <div class="estante" id="estante"></div>
+        </div>
+      </section>
+
+      <section class="epigrafe" id="epigrafe">
+        <div class="orla">
+          <svg aria-hidden="true"><use href="#flor" /></svg>
+        </div>
+        <blockquote id="cita">
+          Teniendo en derredor nuestro tan grande nube de testigos, corramos con
+          paciencia la carrera que tenemos por delante.
+        </blockquote>
+        <cite>hebreos xii · 1</cite>
+      </section>
+
+      <section
+        class="bloque"
+        id="autores"
+        style="padding-top: 0; padding-bottom: clamp(84px, 10vw, 120px)"
+      >
+        <div class="wrap">
+          <header class="cab">
+            <span class="n">ii</span>
+            <h2>Los <em>Autores</em></h2>
+            <p>
+              Padres, doctores, pastores y teólogos cuyas obras han cruzado los
+              siglos.
+            </p>
+            <div class="orla">
+              <svg aria-hidden="true"><use href="#flor" /></svg>
+            </div>
+          </header>
+          <div class="autores" id="lista-autores"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="colofon" id="colofon">
+      <h3>colofón</h3>
+      <p class="cul">
+        <span>Esta biblioteca reúne obras clásicas</span>
+        <span>de la fe cristiana de todos los siglos,</span>
+        <span>traducidos al español y ofrecidos</span>
+        <span>libremente para la edificación</span>
+        <span>de la Iglesia.</span>
+      </p>
+      <div class="orla">
+        <svg aria-hidden="true"><use href="#flor" /></svg>
+      </div>
+      <p class="fin">compuesto en cormorant y eb garamond · mmxxvi</p>
+    </footer>
+
+    <dialog class="ficha" id="ficha" aria-labelledby="ficha-titulo"></dialog>
+
+    <!--CATALOGO-->
+    <script src="indice/indice.js"></script>
+  </body>
+</html>
