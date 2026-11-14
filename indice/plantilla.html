@@ -254,6 +254,35 @@
 
     <dialog class="ficha" id="ficha" aria-labelledby="ficha-titulo"></dialog>
 
+    <dialog class="busqueda" id="busqueda" aria-labelledby="bq-titulo">
+      <div class="bq-cab">
+        <button class="icon-btn cerrar" aria-label="Cerrar">
+          <svg class="ico" viewBox="0 0 24 24">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+        <p class="k" id="bq-titulo">buscar en los textos</p>
+        <label class="campo">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6.5" />
+            <path d="M15.5 15.5L20 20" />
+          </svg>
+          <span class="sr">Buscar en los textos</span>
+          <input
+            id="q2"
+            type="search"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Palabra o frase…"
+          />
+        </label>
+        <p class="bq-cuenta" id="bq-cuenta" aria-live="polite"></p>
+        <div class="bq-filtros" id="bq-filtros"></div>
+      </div>
+      <ol class="bq-lista" id="bq-lista"></ol>
+      <button class="cta bq-mas" id="bq-mas" hidden>más resultados</button>
+    </dialog>
+
     <!--CATALOGO-->
     <script src="indice/indice.js"></script>
   </body>

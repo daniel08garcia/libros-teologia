@@ -229,6 +229,20 @@ El diseño del índice está en la carpeta `indice/` (`plantilla.html`, `indice.
 
 Cada obra tiene un enlace directo a su ficha, por ejemplo `index.html#obra-jonathan-edwards-las-obras-de-jonathan-edwards-vol-2-sermones-y-discursos`.
 
+### Búsqueda y publicación
+
+El buscador de la portada busca al instante en los títulos y, con [Pagefind](https://pagefind.app/), dentro del texto de cada sermón. Cada resultado es un párrafo, y su enlace lleva directamente a ese párrafo resaltado. Una búsqueda se puede compartir con un enlace como `index.html?q=nube de testigos`.
+
+El sitio se publica con la GitHub Action `.github/workflows/publicar.yml`: en cada push a `main` regenera el índice y la búsqueda y publica solo lo necesario (`temp/` no se publica). La carpeta `pagefind/` no se versiona. En GitHub, la opción **Settings → Pages → Source** debe estar en **GitHub Actions**.
+
+Para probar la búsqueda en tu computadora se necesita un servidor local, porque no funciona abriendo `index.html` con doble clic:
+
+```bash
+npm install pagefind@1.5.2   # solo la primera vez
+node createToC.js && node crearBusqueda.js
+npx --yes http-server@14.1.1 -c-1 -p 8080   # y abre http://localhost:8080
+```
+
 Opcionalmente, formatea los archivos con [Prettier](https://prettier.io/) para que los cambios sean fáciles de revisar:
 
 ```bash

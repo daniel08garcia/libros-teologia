@@ -18,7 +18,9 @@ const path = require("path");
 const { JSDOM } = require("jsdom");
 
 const RAIZ = __dirname;
-const CONFIG = JSON.parse(fs.readFileSync(path.join(RAIZ, "indice", "autores.json"), "utf8"));
+const CONFIG = JSON.parse(
+  fs.readFileSync(path.join(RAIZ, "indice", "autores.json"), "utf8"),
+);
 const AUTORES = CONFIG.autores || {};
 const SERIES = CONFIG.series || {};
 const OBRAS = CONFIG.obras || {};
@@ -27,7 +29,8 @@ const OBRAS = CONFIG.obras || {};
 function numero(s) {
   if (!/^[IVXLCDM]+$/.test(s)) return parseInt(s, 10);
   const v = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
-  let r = 0, prev = 0;
+  let r = 0,
+    prev = 0;
   for (const ch of [...s].reverse()) {
     r += v[ch] >= prev ? v[ch] : -v[ch];
     prev = v[ch];
@@ -36,12 +39,19 @@ function numero(s) {
 }
 
 const esc = (s) =>
-  String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  String(s).replace(
+    /[&<>"]/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+  );
 
 // Identificador para enlazar a la ficha de una obra (index.html#obra-...)
 const slug = (s) =>
-  s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
 function listar(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -83,7 +93,9 @@ for (const t of textos) if (!t.dirs.length) (sueltos[t.carpeta] ??= []).push(t);
 
 const obras = new Map();
 for (const t of textos) {
-  let serie = "", titulo, volumen = "";
+  let serie = "",
+    titulo,
+    volumen = "";
   if (t.dirs.length) {
     if (t.dirs.length > 1) serie = SERIES[t.dirs[0]] || t.dirs[0];
     titulo = t.dirs.at(-1);
@@ -95,7 +107,12 @@ for (const t of textos) {
   } else {
     const grupo = sueltos[t.carpeta];
     const base = new Set(grupo.map((g) => g.titulo.replace(/\s+[IVX]+$/, "")));
-    titulo = grupo.length === 1 ? t.titulo : base.size === 1 ? [...base][0] : "Sermones";
+    titulo =
+      grupo.length === 1
+        ? t.titulo
+        : base.size === 1
+          ? [...base][0]
+          : "Sermones";
   }
   const clave = [t.siglo, t.carpeta, serie, volumen, titulo].join("|");
   if (!obras.has(clave)) {
@@ -106,7 +123,9 @@ for (const t of textos) {
       carpeta: t.carpeta,
       autor: a.nombre || t.carpeta,
       color: a.color || "",
-      serie, titulo, volumen,
+      serie,
+      titulo,
+      volumen,
       textos: [],
     });
   }
@@ -115,8 +134,15 @@ for (const t of textos) {
 
 const lista = [...obras.values()].map((o) => {
   o.textos.sort((a, b) => a.orden - b.orden);
-  const anios = o.textos.map((t) => t.fecha.slice(0, 4)).filter(Boolean).sort();
-  o.anio = anios.length ? (anios[0] === anios.at(-1) ? anios[0] : `${anios[0]}–${anios.at(-1)}`) : "";
+  const anios = o.textos
+    .map((t) => t.fecha.slice(0, 4))
+    .filter(Boolean)
+    .sort();
+  o.anio = anios.length
+    ? anios[0] === anios.at(-1)
+      ? anios[0]
+      : `${anios[0]}–${anios.at(-1)}`
+    : "";
   o.textos = o.textos.map((t) => ({
     n: t.id,
     t: t.titulo,
@@ -127,59 +153,93 @@ const lista = [...obras.values()].map((o) => {
   }));
   return o;
 });
-lista.sort((a, b) =>
-  numero(a.siglo) - numero(b.siglo) ||
-  a.autor.localeCompare(b.autor, "es") ||
-  a.serie.localeCompare(b.serie, "es") ||
-  (+a.volumen || 0) - (+b.volumen || 0) ||
-  a.titulo.localeCompare(b.titulo, "es"));
+lista.sort(
+  (a, b) =>
+    numero(a.siglo) - numero(b.siglo) ||
+    a.autor.localeCompare(b.autor, "es") ||
+    a.serie.localeCompare(b.serie, "es") ||
+    (+a.volumen || 0) - (+b.volumen || 0) ||
+    a.titulo.localeCompare(b.titulo, "es"),
+);
 
 // Identificadores únicos para los enlaces a cada ficha
 const usados = new Set();
 for (const o of lista) {
-  let id = slug([o.autor, o.serie, o.volumen && "vol " + o.volumen, o.titulo].filter(Boolean).join(" "));
+  let id = slug(
+    [o.autor, o.serie, o.volumen && "vol " + o.volumen, o.titulo]
+      .filter(Boolean)
+      .join(" "),
+  );
   for (let k = 2; usados.has(id); k++) id = id.replace(/-\d+$/, "") + "-" + k;
   usados.add(id);
   o.id = id;
 }
 
 // ── 3. Autores ──
-const autores = [...new Set(lista.map((o) => o.carpeta))].map((carpeta) => {
-  const a = AUTORES[carpeta] || {};
-  const suyas = lista.filter((o) => o.carpeta === carpeta);
-  return {
-    carpeta,
-    nombre: a.nombre || carpeta,
-    vida: a.vida || "",
-    coleccion: !!a.coleccion,
-    monograma: a.monograma || "",
-    siglo: suyas[0].siglo,
-    obras: suyas.length,
-    textos: suyas.reduce((s, o) => s + o.textos.length, 0),
-    predicadores: a.coleccion
-      ? new Set(textos.filter((t) => t.carpeta === carpeta).map((t) => t.autor)).size
-      : 0,
-  };
-}).sort((a, b) => numero(a.siglo) - numero(b.siglo) || a.nombre.localeCompare(b.nombre, "es"));
+const autores = [...new Set(lista.map((o) => o.carpeta))]
+  .map((carpeta) => {
+    const a = AUTORES[carpeta] || {};
+    const suyas = lista.filter((o) => o.carpeta === carpeta);
+    return {
+      carpeta,
+      nombre: a.nombre || carpeta,
+      vida: a.vida || "",
+      coleccion: !!a.coleccion,
+      monograma: a.monograma || "",
+      siglo: suyas[0].siglo,
+      obras: suyas.length,
+      textos: suyas.reduce((s, o) => s + o.textos.length, 0),
+      predicadores: a.coleccion
+        ? new Set(
+            textos.filter((t) => t.carpeta === carpeta).map((t) => t.autor),
+          ).size
+        : 0,
+    };
+  })
+  .sort(
+    (a, b) =>
+      numero(a.siglo) - numero(b.siglo) ||
+      a.nombre.localeCompare(b.nombre, "es"),
+  );
 
 const catalogo = { obras: lista, autores, total: textos.length };
 
 // ── 4. Escribir index.html ──
 // Lista simple para buscadores y para quien navegue sin JavaScript.
-const sinJs = lista.map((o) =>
-  `<li>${esc(o.autor)}, <i>${esc(o.serie ? o.serie + ": " : "")}${esc(o.titulo)}</i> (siglo ${o.siglo})<ul>` +
-  o.textos.map((t) => `<li><a href="${esc(t.h)}">${esc(t.t)}</a></li>`).join("") +
-  `</ul></li>`).join("");
+const sinJs = lista
+  .map(
+    (o) =>
+      `<li>${esc(o.autor)}, <i>${esc(o.serie ? o.serie + ": " : "")}${esc(o.titulo)}</i> (siglo ${o.siglo})<ul>` +
+      o.textos
+        .map((t) => `<li><a href="${esc(t.h)}">${esc(t.t)}</a></li>`)
+        .join("") +
+      `</ul></li>`,
+  )
+  .join("");
 
-const plantilla = fs.readFileSync(path.join(RAIZ, "indice", "plantilla.html"), "utf8");
-if (!plantilla.includes("<!--CATALOGO-->")) throw new Error("Falta <!--CATALOGO--> en indice/plantilla.html");
+const plantilla = fs.readFileSync(
+  path.join(RAIZ, "indice", "plantilla.html"),
+  "utf8",
+);
+if (!plantilla.includes("<!--CATALOGO-->"))
+  throw new Error("Falta <!--CATALOGO--> en indice/plantilla.html");
 const json = JSON.stringify(catalogo).replace(/</g, "\\u003c");
-const salida = plantilla.replace("<!--CATALOGO-->", () =>
-  `<noscript><section class="sin-js"><h2>Índice</h2><ul>${sinJs}</ul></section></noscript>\n` +
-  `<script id="catalogo" type="application/json">${json}</script>`);
+const salida = plantilla.replace(
+  "<!--CATALOGO-->",
+  () =>
+    `<noscript><section class="sin-js"><h2>Índice</h2><ul>${sinJs}</ul></section></noscript>\n` +
+    `<script id="catalogo" type="application/json">${json}</script>`,
+);
 fs.writeFileSync(path.join(RAIZ, "index.html"), salida);
 
 const siglos = new Set(lista.map((o) => o.siglo)).size;
-console.log(`index.html generado: ${textos.length} textos, ${lista.length} obras, ${autores.length} autores, ${siglos} siglos.`);
-const sinDatos = autores.filter((a) => !AUTORES[a.carpeta]).map((a) => a.carpeta);
-if (sinDatos.length) console.log(`Autores sin datos en indice/autores.json (se muestran sin años de vida): ${sinDatos.join(", ")}`);
+console.log(
+  `index.html generado: ${textos.length} textos, ${lista.length} obras, ${autores.length} autores, ${siglos} siglos.`,
+);
+const sinDatos = autores
+  .filter((a) => !AUTORES[a.carpeta])
+  .map((a) => a.carpeta);
+if (sinDatos.length)
+  console.log(
+    `Autores sin datos en indice/autores.json (se muestran sin años de vida): ${sinDatos.join(", ")}`,
+  );

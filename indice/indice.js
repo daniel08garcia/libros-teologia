@@ -575,7 +575,7 @@
   abrirDesdeEnlace();
   addEventListener("hashchange", abrirDesdeEnlace);
 
-  /* ───────── Buscador (prototipo: títulos, autores y obras) ───────── */
+  /* ───────── Buscador: títulos al instante y texto completo con Pagefind ───────── */
   const norm = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const indice = [];
   datos.obras.forEach((o) =>
@@ -592,8 +592,7 @@
   );
   const q = $("#q"),
     res = $("#resultados");
-  let sel = -1,
-    actuales = [];
+  let sel = -1;
   function resaltar(texto, toks) {
     const n = norm(texto);
     if (n.length !== texto.length) return esc(texto);
@@ -620,14 +619,70 @@
     }
     return out + (dentro ? "</mark>" : "");
   }
+  function itemTitulo(it, toks) {
+    const num = it.t.n === "0" ? "pref." : it.t.n.toLowerCase();
+    const meta = [it.t.a || it.o.autor, tc(it.o.titulo)].join(" · ");
+    return `<a class="res" role="option" href="${esc(it.t.h)}"><span class="num">${num}</span><span class="t">${resaltar(
+      it.titulo,
+      toks.filter((k) => !VACIAS.has(k)),
+    )}</span><span class="m">${esc(meta)}</span></a>`;
+  }
+
+  /* Texto completo con Pagefind (pagefind/, lo genera crearBusqueda.js).
+     Cada resultado es un párrafo; su enlace lleva al párrafo dentro del texto. */
+  let pfCarga = null;
+  function cargarPagefind() {
+    if (pfCarga) return pfCarga;
+    const base = new URL(".", location.href);
+    pfCarga = import(new URL("pagefind/pagefind.js", base).href)
+      .then(async (m) => {
+        await m.options({ baseUrl: base.pathname, excerptLength: 40 });
+        await m.init();
+        await m.filters(); // sin esto, las búsquedas no traen los conteos por siglo y autor
+        return m;
+      })
+      .catch(() => null);
+    return pfCarga;
+  }
+  const sinTexto = () =>
+    location.protocol === "file:"
+      ? "La búsqueda dentro de los textos funciona en el sitio publicado o con un servidor local."
+      : "No se pudo cargar la búsqueda dentro de los textos.";
+  // El extracto de Pagefind trae <mark> alrededor de las coincidencias; todo lo demás se escapa.
+  // No se resaltan artículos ni preposiciones ("la", "por"...), para que destaque lo buscado.
+  const VACIAS = new Set(
+    "a al con de del e el en es la las lo los o para por que se su sus un una y".split(
+      " ",
+    ),
+  );
+  const extracto = (h) =>
+    esc(
+      h
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&amp;/g, "&"),
+    ).replace(/&lt;mark&gt;(.*?)&lt;\/mark&gt;/g, (_, w) =>
+      VACIAS.has(norm(w).replace(/[^a-zñ]/g, "")) ? w : `<mark>${w}</mark>`,
+    );
+  const plural = (n, uno, varios) =>
+    `${n.toLocaleString("es")} ${n === 1 ? uno : varios}`;
+  function itemParrafo(d) {
+    return `<a class="res par" role="option" href="${esc(d.url)}"><span class="ex">${extracto(d.excerpt)}</span><span class="m">${esc(d.meta.autor)} · ${esc(tc(d.meta.title))}</span></a>`;
+  }
+
+  let consulta = 0;
   function buscar() {
-    const toks = norm(q.value)
+    const texto = q.value.trim();
+    const toks = norm(texto)
       .split(/\s+/)
       .filter((k) => k.length > 1);
     if (!toks.length) {
       cerrarResultados();
       return;
     }
+    const id = ++consulta;
     const hallados = [];
     for (const it of indice) {
       if (!toks.every((k) => it.todo.includes(k))) continue;
@@ -639,48 +694,82 @@
       hallados.push([s, it]);
     }
     hallados.sort((a, b) => b[0] - a[0]);
-    actuales = hallados.slice(0, 8).map((x) => x[1]);
-    sel = -1;
-    const nota = `<div class="nota">${hallados.length} ${hallados.length === 1 ? "coincidencia" : "coincidencias"} en títulos y autores.</div>`;
-    res.innerHTML = actuales.length
-      ? actuales
-          .map((it, i) => {
-            const num = it.t.n === "0" ? "pref." : it.t.n.toLowerCase();
-            const meta = [it.t.a || it.o.autor, tc(it.o.titulo)].join(" · ");
-            return `<a class="res" role="option" id="r${i}" href="${esc(it.t.h)}" style="--i:${i}"><span class="num">${num}</span><span class="t">${resaltar(it.titulo, toks)}</span><span class="m">${esc(meta)}</span></a>`;
-          })
-          .join("") + nota
-      : `<div class="vacio">Ningún título coincide con «${esc(q.value.trim())}».</div>`;
+    let h = "";
+    if (hallados.length)
+      h +=
+        `<div class="sec">títulos<span>${hallados.length}</span></div>` +
+        hallados
+          .slice(0, 4)
+          .map((x) => itemTitulo(x[1], toks))
+          .join("");
+    h += `<div class="sec">en el texto<span class="cuenta-texto"></span></div><div class="res-texto"><div class="cargando">buscando…</div></div>`;
+    res.innerHTML = h;
     res.classList.add("abierto");
     q.setAttribute("aria-expanded", "true");
+    sel = -1;
+    marcarSel();
+    buscarTexto(texto, id);
+  }
+  async function buscarTexto(texto, id) {
+    const m = await cargarPagefind();
+    if (id !== consulta) return;
+    const caja = $(".res-texto", res);
+    if (!m) {
+      caja.innerHTML = `<div class="vacio">${sinTexto()}</div>`;
+      return;
+    }
+    const s = await m.debouncedSearch(texto, {}, 200);
+    if (!s || id !== consulta) return;
+    const datos5 = await Promise.all(
+      s.results.slice(0, 5).map((r) => r.data()),
+    );
+    if (id !== consulta) return;
+    $(".cuenta-texto", res).textContent = s.results.length.toLocaleString("es");
+    caja.innerHTML = datos5.length
+      ? datos5.map(itemParrafo).join("") +
+        `<button type="button" class="res ver-todos" role="option">ver ${s.results.length === 1 ? "el párrafo" : `los ${plural(s.results.length, "párrafo", "párrafos")}`} con filtros<span aria-hidden="true">→</span></button>`
+      : `<div class="vacio">Ningún párrafo contiene «${esc(texto)}».</div>`;
+    marcarSel();
   }
   function cerrarResultados() {
+    consulta++;
     res.classList.remove("abierto");
     q.setAttribute("aria-expanded", "false");
     q.removeAttribute("aria-activedescendant");
   }
+  const opciones = () => $$(".res", res);
   function marcarSel() {
-    $$(".res", res).forEach((r, i) =>
-      r.setAttribute("aria-selected", i === sel),
-    );
-    if (sel >= 0) {
+    opciones().forEach((r, i) => {
+      r.id = `r${i}`;
+      r.setAttribute("aria-selected", i === sel);
+    });
+    if (sel >= 0 && opciones()[sel]) {
       q.setAttribute("aria-activedescendant", `r${sel}`);
-      $(`#r${sel}`).scrollIntoView({ block: "nearest" });
-    }
+      opciones()[sel].scrollIntoView({ block: "nearest" });
+    } else q.removeAttribute("aria-activedescendant");
   }
+  res.addEventListener("click", (e) => {
+    if (e.target.closest(".ver-todos")) abrirBusqueda(q.value.trim());
+  });
   q.addEventListener("input", buscar);
-  q.addEventListener("focus", () => q.value.trim() && buscar());
+  q.addEventListener("focus", () => {
+    cargarPagefind();
+    if (q.value.trim()) buscar();
+  });
   q.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowDown" && actuales.length) {
-      sel = (sel + 1) % actuales.length;
+    const ops = opciones();
+    if (e.key === "ArrowDown" && ops.length) {
+      sel = (sel + 1) % ops.length;
       marcarSel();
       e.preventDefault();
-    } else if (e.key === "ArrowUp" && actuales.length) {
-      sel = (sel - 1 + actuales.length) % actuales.length;
+    } else if (e.key === "ArrowUp" && ops.length) {
+      sel = (sel - 1 + ops.length) % ops.length;
       marcarSel();
       e.preventDefault();
-    } else if (e.key === "Enter" && actuales.length) {
-      location.href = actuales[Math.max(sel, 0)].t.h;
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (sel >= 0 && ops[sel]) ops[sel].click();
+      else if (q.value.trim()) abrirBusqueda(q.value.trim());
     } else if (e.key === "Escape") {
       q.value = "";
       cerrarResultados();
@@ -690,11 +779,159 @@
   document.addEventListener("click", (e) => {
     if (!e.target.closest(".buscar")) cerrarResultados();
   });
+
+  /* Ventana con todos los resultados, filtros por siglo y autor, y enlace ?q= */
+  const bq = $("#busqueda"),
+    q2 = $("#q2"),
+    bqLista = $("#bq-lista"),
+    bqMas = $("#bq-mas"),
+    bqCuenta = $("#bq-cuenta"),
+    bqFiltros = $("#bq-filtros");
+  const estado = {
+    texto: "",
+    siglo: null,
+    autor: null,
+    resultados: [],
+    mostrados: 0,
+    id: 0,
+  };
+  async function abrirBusqueda(texto) {
+    cerrarResultados();
+    Object.assign(estado, { texto, siglo: null, autor: null });
+    q2.value = texto;
+    if (!bq.open) bq.showModal();
+    q2.blur();
+    await busquedaCompleta();
+  }
+  async function busquedaCompleta() {
+    const id = ++estado.id;
+    const texto = estado.texto.trim();
+    history.replaceState(
+      null,
+      "",
+      texto ? `?q=${encodeURIComponent(texto)}` : location.pathname,
+    );
+    bqLista.innerHTML = "";
+    bqMas.hidden = true;
+    if (!texto) {
+      bqCuenta.textContent = "";
+      bqFiltros.innerHTML = "";
+      return;
+    }
+    bqCuenta.textContent = "buscando…";
+    const m = await cargarPagefind();
+    if (id !== estado.id) return;
+    if (!m) {
+      bqCuenta.textContent = sinTexto();
+      return;
+    }
+    const filters = {};
+    if (estado.siglo) filters.siglo = estado.siglo;
+    if (estado.autor) filters.autor = estado.autor;
+    const s = await m.search(texto, { filters });
+    if (id !== estado.id) return;
+    estado.resultados = s.results;
+    estado.mostrados = 0;
+    const n = s.results.length;
+    bqCuenta.innerHTML = n
+      ? `<b>${plural(n, "párrafo", "párrafos")}</b>${n !== s.unfilteredResultCount ? ` de ${s.unfilteredResultCount.toLocaleString("es")}` : ""} con «${esc(texto)}»`
+      : `Ningún párrafo contiene «${esc(texto)}».`;
+    pintarFiltrosBusqueda(s.filters, s.totalFilters);
+    await mostrarMas(id);
+  }
+  // Siglos: conteos de toda la búsqueda, para poder cambiar de siglo.
+  // Autores: conteos dentro del siglo elegido.
+  function pintarFiltrosBusqueda(f, total) {
+    const siglos = Object.entries(total?.siglo || f.siglo || {})
+      .filter(([, c]) => c)
+      .sort((a, b) => valorRomano(a[0]) - valorRomano(b[0]));
+    const autores = Object.entries(f.autor || {})
+      .filter(([, c]) => c)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "es"));
+    let h = "";
+    if (siglos.length > 1 || estado.siglo)
+      h +=
+        `<div class="bq-siglos" role="group" aria-label="Siglo"><button class="chip" data-siglo="" aria-pressed="${!estado.siglo}">todos</button>` +
+        siglos
+          .map(
+            ([s, c]) =>
+              `<button class="chip" data-siglo="${s}" aria-pressed="${estado.siglo === s}">${s.toLowerCase()}<small>${c}</small></button>`,
+          )
+          .join("") +
+        `</div>`;
+    if (autores.length > 1 || estado.autor)
+      h +=
+        `<label class="bq-autor"><span class="sr">Autor</span><select id="bq-autor"><option value="">todos los autores</option>` +
+        autores
+          .map(
+            ([a, c]) =>
+              `<option value="${esc(a)}"${estado.autor === a ? " selected" : ""}>${esc(a)} (${c})</option>`,
+          )
+          .join("") +
+        `</select></label>`;
+    bqFiltros.innerHTML = h;
+  }
+  async function mostrarMas(id = estado.id) {
+    const lote = estado.resultados.slice(
+      estado.mostrados,
+      estado.mostrados + 20,
+    );
+    const ds = await Promise.all(lote.map((r) => r.data()));
+    if (id !== estado.id) return;
+    bqLista.insertAdjacentHTML(
+      "beforeend",
+      ds
+        .map(
+          (d, i) => `<li style="--i:${i}"><a href="${esc(d.url)}">
+        <span class="ex">${extracto(d.excerpt)}</span>
+        <span class="donde"><span class="t">${esc(tc(d.meta.title))}</span><span class="m">${esc(d.meta.autor)} · ${esc(tc(d.meta.obra))} · siglo ${esc(d.meta.siglo.toLowerCase())}</span></span>
+      </a></li>`,
+        )
+        .join(""),
+    );
+    estado.mostrados += lote.length;
+    bqMas.hidden = estado.mostrados >= estado.resultados.length;
+  }
+  let pausa;
+  q2.addEventListener("input", () => {
+    clearTimeout(pausa);
+    pausa = setTimeout(() => {
+      Object.assign(estado, { texto: q2.value, siglo: null, autor: null });
+      busquedaCompleta();
+    }, 250);
+  });
+  q2.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") e.preventDefault();
+  });
+  bqFiltros.addEventListener("click", (e) => {
+    const b = e.target.closest(".chip");
+    if (!b) return;
+    estado.siglo = b.dataset.siglo || null;
+    busquedaCompleta();
+  });
+  bqFiltros.addEventListener("change", (e) => {
+    if (e.target.id !== "bq-autor") return;
+    estado.autor = e.target.value || null;
+    busquedaCompleta();
+  });
+  bqMas.addEventListener("click", () => mostrarMas());
+  bq.addEventListener("click", (e) => {
+    if (e.target === bq || e.target.closest(".cerrar")) bq.close();
+  });
+  bq.addEventListener("close", () => {
+    estado.id++;
+    if (location.search)
+      history.replaceState(null, "", location.pathname + location.hash);
+  });
+  const qInicial = new URLSearchParams(location.search).get("q");
+  if (qInicial) abrirBusqueda(qInicial);
+
   document.addEventListener("keydown", (e) => {
     if (
       e.key === "/" &&
-      !/input|textarea/i.test(document.activeElement?.tagName) &&
-      !ficha.open
+      !/input|textarea|select/i.test(document.activeElement?.tagName) &&
+      !ficha.open &&
+      !bq.open
     ) {
       e.preventDefault();
       q.focus();

@@ -1,0 +1,58 @@
+# Publica el sitio en GitHub Pages en cada push a main.
+# Regenera el índice (createToC.js) y la búsqueda de texto completo (crearBusqueda.js),
+# y publica solo lo que el sitio necesita (temp/ y los archivos del repositorio no se publican).
+#
+# Requisito, una sola vez: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+name: Publicar sitio
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # package.json no se versiona, así que las dependencias se instalan con versión fija
+      - name: Instalar dependencias
+        run: npm install --no-save jsdom@24.1.0 pagefind@1.5.2
+
+      - name: Generar índice
+        run: node createToC.js
+
+      - name: Generar búsqueda
+        run: node crearBusqueda.js
+
+      - name: Reunir los archivos del sitio
+        run: |
+          mkdir _site
+          cp -r index.html favicon.ico indice siglo css assets pagefind _site/
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Publicar
+        id: despliegue
+        uses: actions/deploy-pages@v4

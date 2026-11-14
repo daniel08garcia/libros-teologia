@@ -5,3 +5,6 @@ package-lock.json
 .prettierrc
 .vscode
 temp/trabajo/*/
+
+# índice de búsqueda (lo genera crearBusqueda.js en la GitHub Action)
+/pagefind
