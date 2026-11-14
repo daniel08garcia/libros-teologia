@@ -725,10 +725,13 @@
     );
     if (id !== consulta) return;
     $(".cuenta-texto", res).textContent = s.results.length.toLocaleString("es");
+    const porSentido = `<button type="button" class="res ver-todos" role="option" data-modo="sentido">buscar por sentido<span aria-hidden="true">→</span></button>`;
     caja.innerHTML = datos5.length
       ? datos5.map(itemParrafo).join("") +
-        `<button type="button" class="res ver-todos" role="option">ver ${s.results.length === 1 ? "el párrafo" : `los ${plural(s.results.length, "párrafo", "párrafos")}`} con filtros<span aria-hidden="true">→</span></button>`
-      : `<div class="vacio">Ningún párrafo contiene «${esc(texto)}».</div>`;
+        `<button type="button" class="res ver-todos" role="option" data-modo="palabras">ver ${s.results.length === 1 ? "el párrafo" : `los ${plural(s.results.length, "párrafo", "párrafos")}`} con filtros<span aria-hidden="true">→</span></button>` +
+        porSentido
+      : `<div class="vacio">Ningún párrafo contiene «${esc(texto)}».</div>` +
+        porSentido;
     marcarSel();
   }
   function cerrarResultados() {
@@ -749,7 +752,8 @@
     } else q.removeAttribute("aria-activedescendant");
   }
   res.addEventListener("click", (e) => {
-    if (e.target.closest(".ver-todos")) abrirBusqueda(q.value.trim());
+    const b = e.target.closest(".ver-todos");
+    if (b) abrirBusqueda(q.value.trim(), b.dataset.modo);
   });
   q.addEventListener("input", buscar);
   q.addEventListener("focus", () => {
@@ -780,36 +784,49 @@
     if (!e.target.closest(".buscar")) cerrarResultados();
   });
 
-  /* Ventana con todos los resultados, filtros por siglo y autor, y enlace ?q= */
+  /* Ventana con todos los resultados: por palabras (Pagefind) o por sentido (vectores),
+     con filtros por siglo y autor, y enlace ?q=…&modo=sentido */
   const bq = $("#busqueda"),
     q2 = $("#q2"),
     bqLista = $("#bq-lista"),
     bqMas = $("#bq-mas"),
     bqCuenta = $("#bq-cuenta"),
-    bqFiltros = $("#bq-filtros");
+    bqFiltros = $("#bq-filtros"),
+    bqModo = $("#bq-modo");
   const estado = {
     texto: "",
+    modo: "palabras",
     siglo: null,
     autor: null,
     resultados: [],
     mostrados: 0,
     id: 0,
   };
-  async function abrirBusqueda(texto) {
+  async function abrirBusqueda(texto, modo = "palabras") {
     cerrarResultados();
-    Object.assign(estado, { texto, siglo: null, autor: null });
+    Object.assign(estado, { texto, modo, siglo: null, autor: null });
     q2.value = texto;
+    pintarModo();
     if (!bq.open) bq.showModal();
     q2.blur();
     await busquedaCompleta();
   }
+  function pintarModo() {
+    $$("button", bqModo).forEach((b) =>
+      b.setAttribute("aria-checked", b.dataset.modo === estado.modo),
+    );
+    bq.dataset.modo = estado.modo;
+  }
   async function busquedaCompleta() {
     const id = ++estado.id;
     const texto = estado.texto.trim();
+    const params = new URLSearchParams();
+    if (texto) params.set("q", texto);
+    if (texto && estado.modo === "sentido") params.set("modo", "sentido");
     history.replaceState(
       null,
       "",
-      texto ? `?q=${encodeURIComponent(texto)}` : location.pathname,
+      params.size ? `?${params}` : location.pathname,
     );
     bqLista.innerHTML = "";
     bqMas.hidden = true;
@@ -818,6 +835,7 @@
       bqFiltros.innerHTML = "";
       return;
     }
+    if (estado.modo === "sentido") return buscarPorSentido(id, texto);
     bqCuenta.textContent = "buscando…";
     const m = await cargarPagefind();
     if (id !== estado.id) return;
@@ -832,22 +850,31 @@
     if (id !== estado.id) return;
     estado.resultados = s.results;
     estado.mostrados = 0;
+    estado.lote = async (lote) =>
+      (await Promise.all(lote.map((r) => r.data()))).map((d) => ({
+        url: d.url,
+        ex: extracto(d.excerpt),
+        t: d.meta.title,
+        m: `${d.meta.autor} · ${tc(d.meta.obra)} · siglo ${d.meta.siglo.toLowerCase()}`,
+      }));
     const n = s.results.length;
     bqCuenta.innerHTML = n
       ? `<b>${plural(n, "párrafo", "párrafos")}</b>${n !== s.unfilteredResultCount ? ` de ${s.unfilteredResultCount.toLocaleString("es")}` : ""} con «${esc(texto)}»`
-      : `Ningún párrafo contiene «${esc(texto)}».`;
-    pintarFiltrosBusqueda(s.filters, s.totalFilters);
+      : `Ningún párrafo contiene «${esc(texto)}». <button type="button" class="enlace" data-modo="sentido">Buscar por sentido</button>`;
+    // Siglos: conteos de toda la búsqueda, para poder cambiar de siglo.
+    // Autores: conteos dentro del siglo elegido.
+    const conteos = (o) => Object.entries(o || {}).filter(([, c]) => c);
+    pintarFiltrosBusqueda(
+      conteos(s.totalFilters?.siglo || s.filters.siglo),
+      conteos(s.filters.autor).sort(
+        (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "es"),
+      ),
+    );
     await mostrarMas(id);
   }
-  // Siglos: conteos de toda la búsqueda, para poder cambiar de siglo.
-  // Autores: conteos dentro del siglo elegido.
-  function pintarFiltrosBusqueda(f, total) {
-    const siglos = Object.entries(total?.siglo || f.siglo || {})
-      .filter(([, c]) => c)
-      .sort((a, b) => valorRomano(a[0]) - valorRomano(b[0]));
-    const autores = Object.entries(f.autor || {})
-      .filter(([, c]) => c)
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "es"));
+  // siglos y autores: listas de [valor, conteo]; sin conteo en la búsqueda por sentido
+  function pintarFiltrosBusqueda(siglos, autores) {
+    siglos.sort((a, b) => valorRomano(a[0]) - valorRomano(b[0]));
     let h = "";
     if (siglos.length > 1 || estado.siglo)
       h +=
@@ -855,7 +882,7 @@
         siglos
           .map(
             ([s, c]) =>
-              `<button class="chip" data-siglo="${s}" aria-pressed="${estado.siglo === s}">${s.toLowerCase()}<small>${c}</small></button>`,
+              `<button class="chip" data-siglo="${s}" aria-pressed="${estado.siglo === s}">${s.toLowerCase()}${c ? `<small>${c}</small>` : ""}</button>`,
           )
           .join("") +
         `</div>`;
@@ -865,7 +892,7 @@
         autores
           .map(
             ([a, c]) =>
-              `<option value="${esc(a)}"${estado.autor === a ? " selected" : ""}>${esc(a)} (${c})</option>`,
+              `<option value="${esc(a)}"${estado.autor === a ? " selected" : ""}>${esc(a)}${c ? ` (${c})` : ""}</option>`,
           )
           .join("") +
         `</select></label>`;
@@ -876,15 +903,16 @@
       estado.mostrados,
       estado.mostrados + 20,
     );
-    const ds = await Promise.all(lote.map((r) => r.data()));
+    const items = await estado.lote(lote);
     if (id !== estado.id) return;
     bqLista.insertAdjacentHTML(
       "beforeend",
-      ds
+      items
         .map(
           (d, i) => `<li style="--i:${i}"><a href="${esc(d.url)}">
-        <span class="ex">${extracto(d.excerpt)}</span>
-        <span class="donde"><span class="t">${esc(tc(d.meta.title))}</span><span class="m">${esc(d.meta.autor)} · ${esc(tc(d.meta.obra))} · siglo ${esc(d.meta.siglo.toLowerCase())}</span></span>
+        ${d.afinidad != null ? `<span class="afin" style="--a:${d.afinidad.toFixed(3)}" title="cercanía con la búsqueda"></span>` : ""}
+        <span class="ex">${d.ex}</span>
+        <span class="donde"><span class="t">${esc(tc(d.t))}</span><span class="m">${esc(d.m)}</span></span>
       </a></li>`,
         )
         .join(""),
@@ -892,13 +920,232 @@
     estado.mostrados += lote.length;
     bqMas.hidden = estado.mostrados >= estado.resultados.length;
   }
+
+  /* Búsqueda por sentido: el trabajo pesado lo hace indice/semantica.js en un Web Worker */
+  const BASE = new URL(".", location.href);
+  const CLAVE_SENTIDO = "busqueda-sentido";
+  let trabajador = null,
+    semListo = null,
+    semTextos = null,
+    alProgreso = null,
+    pedido = 0;
+  const pendientes = new Map();
+  const sentidoActivado = () => {
+    try {
+      return localStorage.getItem(CLAVE_SENTIDO) === "1";
+    } catch (e) {
+      return false;
+    }
+  };
+  function iniciarSentido() {
+    if (semListo) return semListo;
+    semListo = new Promise((resolve, reject) => {
+      try {
+        trabajador = new Worker(new URL("indice/semantica.js", BASE), {
+          type: "module",
+        });
+      } catch (e) {
+        reject(e);
+        return;
+      }
+      trabajador.onmessage = ({ data }) => {
+        if (data.tipo === "progreso") alProgreso?.(data.fraccion);
+        else if (data.tipo === "listo") {
+          semTextos = data.textos;
+          try {
+            localStorage.setItem(CLAVE_SENTIDO, "1");
+          } catch (e) {}
+          resolve();
+        } else if (data.tipo === "resultados") {
+          pendientes.get(data.id)?.resolve(data.lista);
+          pendientes.delete(data.id);
+        } else if (data.tipo === "error") {
+          const p = pendientes.get(data.id);
+          if (p) {
+            p.reject(new Error(data.mensaje));
+            pendientes.delete(data.id);
+          } else reject(new Error(data.mensaje));
+        }
+      };
+      trabajador.onerror = (e) =>
+        reject(
+          new Error(e.message || "No se pudo iniciar la búsqueda por sentido."),
+        );
+      trabajador.postMessage({ tipo: "cargar", base: BASE.href });
+    });
+    semListo.catch(() => {
+      trabajador?.terminate();
+      trabajador = null;
+      semListo = null;
+    });
+    return semListo;
+  }
+  function consultarSentido(texto) {
+    const id = ++pedido;
+    return new Promise((resolve, reject) => {
+      pendientes.set(id, { resolve, reject });
+      trabajador.postMessage({
+        tipo: "buscar",
+        id,
+        texto,
+        siglo: estado.siglo,
+        autor: estado.autor,
+        base: BASE.href,
+      });
+    });
+  }
+  // Texto del párrafo n de un sermón (misma regla que comun.js), descargando el sermón una vez
+  const sermones = new Map();
+  function parrafoDe(h, n) {
+    if (!sermones.has(h))
+      sermones.set(
+        h,
+        fetch(new URL(h, BASE))
+          .then((r) => r.text())
+          .then((html) => {
+            const doc = new DOMParser().parseFromString(html, "text/html");
+            const ps = [];
+            for (const el of doc.body.querySelectorAll("p, blockquote"))
+              if (!el.parentElement.closest("blockquote"))
+                ps.push(el.textContent.replace(/\s+/g, " ").trim());
+            return ps;
+          }),
+      );
+    return sermones.get(h).then((ps) => ps[n - 1] || "");
+  }
+  const fragmento = (s) => encodeURIComponent(s).replace(/-/g, "%2D");
+  function enlaceParrafo(h, texto) {
+    const w = texto.split(" ");
+    if (w.length <= 12) return `${h}#:~:text=${fragmento(texto)}`;
+    return `${h}#:~:text=${fragmento(w.slice(0, 6).join(" "))},${fragmento(w.slice(-6).join(" "))}`;
+  }
+  const recortar = (texto, max = 70) => {
+    const w = texto.split(" ");
+    return w.length > max ? w.slice(0, max).join(" ") + " …" : texto;
+  };
+
+  function avisoSentido(cargando) {
+    bqCuenta.textContent = "";
+    bqFiltros.innerHTML = "";
+    bqLista.innerHTML = `<li class="sentido-aviso">
+      <p class="lema">Encuentra pasajes por lo que dicen, aunque no usen las mismas palabras.</p>
+      <p>Por ejemplo, «consuelo en la aflicción» también encuentra párrafos sobre la mano de Dios en la prueba. Usa un modelo de lenguaje que se descarga una sola vez (unos 140 MB) y funciona dentro de tu navegador: tus búsquedas no salen de tu equipo.</p>
+      ${
+        location.protocol === "file:"
+          ? `<p class="nota-sentido">${sinTexto().replace("dentro de los textos", "por sentido")}</p>`
+          : `<button type="button" class="cta" id="activar-sentido"${cargando ? " hidden" : ""}>activar</button>
+      <div class="barra"${cargando ? "" : " hidden"}><span></span></div>
+      <p class="nota-sentido" id="estado-sentido"></p>`
+      }
+    </li>`;
+  }
+  async function buscarPorSentido(id, texto) {
+    if (!semTextos) {
+      const automatico = sentidoActivado();
+      avisoSentido(automatico);
+      if (!automatico || location.protocol === "file:") return;
+      try {
+        await prepararSentido();
+      } catch (e) {
+        return;
+      }
+      if (id !== estado.id) return;
+    }
+    bqCuenta.textContent = "buscando…";
+    // Filtros: todos los siglos y autores (en esta búsqueda no hay conteos)
+    const siglos = [...new Set(semTextos.map((t) => t.s))].map((s) => [s, ""]);
+    const autores = [...new Set(semTextos.map((t) => t.a))]
+      .sort((a, b) => a.localeCompare(b, "es"))
+      .map((a) => [a, ""]);
+    pintarFiltrosBusqueda(siglos, autores);
+    let lista;
+    try {
+      lista = await consultarSentido(texto);
+    } catch (e) {
+      if (id === estado.id)
+        bqCuenta.textContent = "No se pudo completar la búsqueda por sentido.";
+      return;
+    }
+    if (id !== estado.id) return;
+    const alto = lista[0]?.s ?? 1,
+      bajo = lista.at(-1)?.s ?? 0;
+    estado.resultados = lista;
+    estado.mostrados = 0;
+    estado.lote = (lote) =>
+      Promise.all(
+        lote.map(async (r) => {
+          const t = semTextos[r.ti];
+          const texto = await parrafoDe(t.h, r.n);
+          return {
+            url: enlaceParrafo(t.h, texto),
+            ex: esc(recortar(texto)),
+            t: t.t,
+            m: `${t.a} · ${tc(t.o)} · siglo ${t.s.toLowerCase()}`,
+            afinidad:
+              alto > bajo ? 0.25 + (0.75 * (r.s - bajo)) / (alto - bajo) : 1,
+          };
+        }),
+      );
+    bqCuenta.innerHTML = lista.length
+      ? `<b>los ${lista.length} párrafos</b> más cercanos a «${esc(texto)}»`
+      : `No hay párrafos con esos filtros.`;
+    await mostrarMas(id);
+  }
+  async function prepararSentido() {
+    const barra = $(".barra span", bqLista),
+      nota = $("#estado-sentido", bqLista);
+    $(".barra", bqLista)?.removeAttribute("hidden");
+    $("#activar-sentido", bqLista)?.setAttribute("hidden", "");
+    if (nota) nota.textContent = "preparando…";
+    alProgreso = (f) => {
+      if (barra) barra.style.width = `${(f * 100).toFixed(1)}%`;
+      if (nota) nota.textContent = `descargando… ${Math.round(f * 100)} %`;
+    };
+    try {
+      await iniciarSentido();
+    } catch (e) {
+      if (nota)
+        nota.textContent =
+          "No se pudo cargar la búsqueda por sentido. Revisa tu conexión e inténtalo de nuevo.";
+      $(".barra", bqLista)?.setAttribute("hidden", "");
+      $("#activar-sentido", bqLista)?.removeAttribute("hidden");
+      throw e;
+    } finally {
+      alProgreso = null;
+    }
+  }
+  bqLista.addEventListener("click", async (e) => {
+    if (!e.target.closest("#activar-sentido")) return;
+    try {
+      await prepararSentido();
+      busquedaCompleta();
+    } catch (err) {}
+  });
+  bqModo.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-modo]");
+    if (!b || b.dataset.modo === estado.modo) return;
+    Object.assign(estado, { modo: b.dataset.modo, siglo: null, autor: null });
+    pintarModo();
+    busquedaCompleta();
+  });
+  bqCuenta.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-modo]");
+    if (!b) return;
+    Object.assign(estado, { modo: b.dataset.modo, siglo: null, autor: null });
+    pintarModo();
+    busquedaCompleta();
+  });
+
   let pausa;
   q2.addEventListener("input", () => {
     clearTimeout(pausa);
-    pausa = setTimeout(() => {
-      Object.assign(estado, { texto: q2.value, siglo: null, autor: null });
-      busquedaCompleta();
-    }, 250);
+    pausa = setTimeout(
+      () => {
+        Object.assign(estado, { texto: q2.value, siglo: null, autor: null });
+        busquedaCompleta();
+      },
+      estado.modo === "sentido" ? 600 : 250,
+    );
   });
   q2.addEventListener("keydown", (e) => {
     if (e.key === "Enter") e.preventDefault();
@@ -923,8 +1170,12 @@
     if (location.search)
       history.replaceState(null, "", location.pathname + location.hash);
   });
-  const qInicial = new URLSearchParams(location.search).get("q");
-  if (qInicial) abrirBusqueda(qInicial);
+  const params = new URLSearchParams(location.search);
+  if (params.get("q"))
+    abrirBusqueda(
+      params.get("q"),
+      params.get("modo") === "sentido" ? "sentido" : "palabras",
+    );
 
   document.addEventListener("keydown", (e) => {
     if (

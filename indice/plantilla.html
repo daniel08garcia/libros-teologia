@@ -276,6 +276,29 @@
             placeholder="Palabra o frase…"
           />
         </label>
+        <div
+          class="bq-modo"
+          id="bq-modo"
+          role="radiogroup"
+          aria-label="Tipo de búsqueda"
+        >
+          <button
+            type="button"
+            role="radio"
+            data-modo="palabras"
+            aria-checked="true"
+          >
+            por palabras
+          </button>
+          <button
+            type="button"
+            role="radio"
+            data-modo="sentido"
+            aria-checked="false"
+          >
+            por sentido
+          </button>
+        </div>
         <p class="bq-cuenta" id="bq-cuenta" aria-live="polite"></p>
         <div class="bq-filtros" id="bq-filtros"></div>
       </div>

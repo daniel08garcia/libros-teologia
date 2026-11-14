@@ -34,18 +34,22 @@ jobs:
 
       # package.json no se versiona, así que las dependencias se instalan con versión fija
       - name: Instalar dependencias
-        run: npm install --no-save jsdom@24.1.0 pagefind@1.5.2
+        run: npm install --no-save jsdom@24.1.0 pagefind@1.5.2 @huggingface/transformers@3.8.1
 
       - name: Generar índice
         run: node createToC.js
 
-      - name: Generar búsqueda
+      - name: Generar búsqueda por palabras
         run: node crearBusqueda.js
+
+      # Usa los vectores guardados en vectores/; solo calcula los de textos nuevos o modificados
+      - name: Generar búsqueda por sentido
+        run: node crearVectores.js
 
       - name: Reunir los archivos del sitio
         run: |
           mkdir _site
-          cp -r index.html favicon.ico indice siglo css assets pagefind _site/
+          cp -r index.html favicon.ico indice siglo css assets pagefind semantica _site/
 
       - uses: actions/configure-pages@v5
 

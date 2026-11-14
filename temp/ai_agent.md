@@ -190,10 +190,11 @@ El tamaño por defecto es de 6,000 caracteres por fragmento. Los cortes siempre 
    - Que los sermones estén bien separados: un encabezado "SERMÓN …" a mitad del archivo indica dos sermones unidos, y un texto muy corto indica un sermón cortado.
    - Que no queden restos: texto en inglés, markdown, `@@`, `PENDIENTE` o "Here is the translation".
 2. Corrige todos los **ERROR** que vengan de los archivos que acabas de crear. Hazlo en el manifiesto o en `sermones/sNN.es.txt`, y vuelve a ejecutar `html --sobrescribir`. Los **avisos** se revisan y se mencionan en el reporte.
-3. Regenera el índice:
+3. Regenera el índice y calcula los vectores de la búsqueda por sentido de los textos nuevos (quedan en `vectores/` para el commit):
    ```bash
    node createToC.js
    npx --yes prettier@3.3.3 --write index.html
+   node crearVectores.js
    ```
 
 ### Paso 6: Reporte final al usuario

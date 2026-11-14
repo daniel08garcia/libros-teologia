@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# vectores de la búsqueda por sentido (crearVectores.js)
+vectores/*.bin binary

@@ -233,13 +233,15 @@ Cada obra tiene un enlace directo a su ficha, por ejemplo `index.html#obra-jonat
 
 El buscador de la portada busca al instante en los títulos y, con [Pagefind](https://pagefind.app/), dentro del texto de cada sermón. Cada resultado es un párrafo, y su enlace lleva directamente a ese párrafo resaltado. Una búsqueda se puede compartir con un enlace como `index.html?q=nube de testigos`.
 
-El sitio se publica con la GitHub Action `.github/workflows/publicar.yml`: en cada push a `main` regenera el índice y la búsqueda y publica solo lo necesario (`temp/` no se publica). La carpeta `pagefind/` no se versiona. En GitHub, la opción **Settings → Pages → Source** debe estar en **GitHub Actions**.
+En la ventana de resultados también se puede buscar **por sentido**: encuentra párrafos por lo que dicen, aunque no usen las mismas palabras (por ejemplo, `index.html?q=consuelo en la aflicción&modo=sentido`). Usa el modelo [multilingual-e5-small](https://huggingface.co/intfloat/multilingual-e5-small), que el navegador descarga una sola vez (unos 140 MB) cuando el lector activa esta búsqueda; las consultas se procesan en el equipo del lector. `crearVectores.js` calcula el vector de cada párrafo y los guarda en `vectores/`, un archivo por texto, que **sí se versiona**: así solo se calculan los textos nuevos o modificados (unos 2 o 3 segundos por sermón). Si se edita o borra un texto, su archivo anterior queda sin uso; `node crearVectores.js --limpiar` los quita.
+
+El sitio se publica con la GitHub Action `.github/workflows/publicar.yml`: en cada push a `main` regenera el índice, las dos búsquedas y publica solo lo necesario (`temp/` no se publica). Las carpetas `pagefind/` y `semantica/` no se versionan. Si un texto nuevo llega sin sus vectores, la Action los calcula, pero no los guarda en el repositorio: conviene ejecutar `node crearVectores.js` antes de hacer commit para que queden en `vectores/`. En GitHub, la opción **Settings → Pages → Source** debe estar en **GitHub Actions**.
 
 Para probar la búsqueda en tu computadora se necesita un servidor local, porque no funciona abriendo `index.html` con doble clic:
 
 ```bash
-npm install pagefind@1.5.2   # solo la primera vez
-node createToC.js && node crearBusqueda.js
+npm install pagefind@1.5.2 @huggingface/transformers@3.8.1   # solo la primera vez
+node createToC.js && node crearBusqueda.js && node crearVectores.js
 npx --yes http-server@14.1.1 -c-1 -p 8080   # y abre http://localhost:8080
 ```
 
