@@ -87,7 +87,9 @@ Este proyecto se enfoca en la traducción de textos teológicos de siglos pasado
 
 ## Estructura del Proyecto
 
-Los archivos se organizan por siglo (en números romanos) y luego por el nombre del autor. Si un texto forma parte de una obra mayor (un libro, una colección de sermones o un volumen), se agregan carpetas para la obra:
+Los archivos se organizan por siglo (en números romanos) y luego por el nombre del autor. El siglo es aquel en que el autor escribió la obra, no el de la edición que se traduce. Por ejemplo, las obras de William Bates van en `XVII` aunque la edición traducida sea de 1815.
+
+Si un texto forma parte de una obra mayor (un libro, una colección de sermones o un volumen), se agregan carpetas para la obra:
 
 ```
 siglo/
@@ -102,7 +104,7 @@ siglo/
 
 Ejemplos reales:
 
-- `siglo/XV/Martín Lutero/Sobre la libertad cristiana.html`
+- `siglo/XVI/Martín Lutero/Sobre la libertad cristiana.html`
 - `siglo/XIX/William S Plumer/Piedad Vital/Observaciones Generales sobre la Experiencia Religiosa.html`
 - `siglo/XVIII/Jonathan Edwards/The Works of Jonathan Edwards/Volumen 2/Pecadores En Las Manos De Un Dios Airado.html`
 
@@ -180,7 +182,7 @@ Las rutas a `assets/` y `css/` dependen de qué tan profundo esté el archivo. E
 
 | Ubicación del archivo                                        | Prefijo           |
 | ------------------------------------------------------------ | ----------------- |
-| `siglo/XV/Martín Lutero/archivo.html`                        | `../../../`       |
+| `siglo/XVI/Martín Lutero/archivo.html`                       | `../../../`       |
 | `siglo/XIX/William S Plumer/Piedad Vital/archivo.html`       | `../../../../`    |
 | `siglo/XVIII/Jonathan Edwards/[Obra]/[Volumen]/archivo.html` | `../../../../../` |
 
