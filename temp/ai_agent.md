@@ -125,6 +125,8 @@ node temp/scripts/sermones.js dividir "<original>" "temp/trabajo/<nombre>"
    ```
 4. Revisa la lista que imprime el comando. Cada sermón debe empezar con su encabezado. Si un corte está mal, corrige el patrón o las marcas y repite con `--forzar`.
 
+**Títulos marcados.** Los originales transcritos de PDF con `temp/scripts/ocr.py` traen los títulos marcados: `## ` (título de obra, capítulo o división principal) y `### ` (subdivisión). Las marcas pasan por todo el flujo: el traductor las conserva, `revisar` da error si una se pierde o sobra, y `html` las convierte en `<h2>` y `<h3>`. El primer `## ` de cada obra es su título y va en el `<h1>`: sáltalo con `saltar_parrafos`. Con `--multiple`, las marcas ayudan a ubicar dónde empieza cada obra (`grep -n "^## " <original>`). Un original de un solo sermón o capítulo puede no tener ninguna marca: no pasa nada.
+
 El tamaño por defecto es de 6,000 caracteres por fragmento. Los cortes siempre caen entre párrafos y **un párrafo nunca se divide**: si un párrafo solo pasa del límite, va solo en su propio fragmento (en el manifiesto queda con `"parrafo_largo": true`), aunque mida más de 6,000 caracteres.
 
 ### Paso 2: Traducir
@@ -257,7 +259,7 @@ CONTEXTO: fragmento {{n}} de {{total}} de "{{encabezado_en}}" ({{autor}}).
 FORMATO (obligatorio):
 - El archivo tiene exactamente {{parrafos}} párrafos separados por una línea en blanco. Tu traducción debe tener exactamente {{parrafos}} párrafos, en el mismo orden: un párrafo inglés = un párrafo español. No unas, dividas, omitas ni agregues párrafos.
 - Cada párrafo va en una sola línea, con una línea en blanco entre párrafos.
-- Texto plano UTF-8. Sin markdown, sin negritas, sin itálicas, sin listas, sin títulos con #.
+- Texto plano UTF-8. Sin markdown, sin negritas, sin itálicas, sin listas. No agregues títulos con #. Única excepción: si un párrafo del original empieza con "## " o "### " (marca de título), tu párrafo empieza con la misma marca y luego el título traducido: "## CHAPTER III." → "## CAPÍTULO III.".
 - Conserva exactamente los marcadores de nota como [613] y las secciones como § 14. Las notas al final ([613] Rom. ix. 5.) también se traducen y conservan su número.
 - Conserva las numeraciones al inicio de los párrafos (1., 2., I., II.). "First," → "Primero,".
 - Encabezados: SERMON VI: → SERMÓN VI:, DOCTRINE. → DOCTRINA., APPLICATION. → APLICACIÓN., IMPROVEMENT. → APLICACIÓN., USE I. → USO I., SECT. II. → SECCIÓN II.

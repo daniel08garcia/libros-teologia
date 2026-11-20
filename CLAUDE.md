@@ -10,7 +10,7 @@ Biblioteca de sermones y libros puritanos y reformados traducidos al español, p
 - Búsqueda por palabras: `crearBusqueda.js` genera `pagefind/` (un registro por párrafo; no se versiona). Búsqueda por sentido: `crearVectores.js` guarda los vectores de cada texto en `vectores/` (sí se versiona; solo calcula los textos nuevos o modificados) y arma `semantica/` (no se versiona). `comun.js` tiene la regla de párrafos que comparten ambos y que `indice/indice.js` repite en el navegador. El sitio lo publica la GitHub Action `.github/workflows/publicar.yml`, que corre los tres scripts; `temp/` no se publica.
 - `temp/originales/`: originales en inglés que el usuario deja para traducir.
 - `temp/trabajo/`: carpetas de trabajo de cada traducción (ignoradas por git). Los archivos sueltos de la raíz, como las instrucciones de agentes y los scripts `cripplegate-*.js`, sí se versionan.
-- `temp/ocr_agent.md`: guía para transcribir PDFs escaneados a `.txt` con agentes Haiku (`.claude/agents/ocr-transcriptor.md`) y el script `temp/scripts/ocr.py` (Python con PyMuPDF: info, preparar, pendientes, validar, capa, unir).
+- `temp/ocr_agent.md`: guía para transcribir PDFs escaneados a `.txt` con agentes Haiku (`.claude/agents/ocr-transcriptor.md`) y el script `temp/scripts/ocr.py` (Python con PyMuPDF: info, preparar, pendientes, limpiar, validar, cortes, capa, unir). Al terminar cada libro, se agregan a esa guía (bitácora de la sección 6), al agente o al script las lecciones nuevas.
 - `temp/scripts/sermones.js`: herramienta del flujo de traducción (dividir, revisar, aplicar, unir, html, validar). `temp/scripts/falsos-cognados.json` es el glosario que usa `revisar`.
 
 ## Traducir un libro o sermón

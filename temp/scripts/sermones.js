@@ -315,6 +315,8 @@ const pareceIngles = (p, min = 4) => {
 const RE_AGREGADO = /^(nota del traductor|n\. del t\.|traducci[oó]n:|aqu[ií] (est[aá]|tienes)|lo siento|i'?m sorry|here is|translation|sure[,!])/i;
 const RE_MARKDOWN = /\*\*\p{L}[^*]{0,120}\*\*|__\p{L}[^_]{0,120}__|```/u;
 const RE_FORMATO = new RegExp(RE_MARKDOWN.source + "|^#{1,6}\\s|^>\\s|^\\s*[-*]\\s", "u");
+/** Marca de título al inicio del párrafo ("## " → <h2>, "### " → <h3>), o null. Viene de los originales transcritos con ocr.py. */
+const marcaTitulo = (p) => (p.match(/^(#{2,3}) /) || [])[1] || null;
 
 function cargarGlosario() {
   return leerJSON(GLOSARIO).map((e) => ({
@@ -350,7 +352,12 @@ function revisarPar(enT, esT, glos) {
     if (pareceIngles(p)) E.push({ tipo: "sin_traducir", parrafo: n, detalle: `Posible texto en inglés: ${p.slice(0, 120)}` });
     // "Here is the case:" en el original se traduce "Aquí está el caso:": no es texto agregado
     if (RE_AGREGADO.test(p) && !(iguales && /^(here(in)? (is|are|lies)|translation)/i.test(en[i]))) E.push({ tipo: "agregado", parrafo: n, detalle: `Texto que no es traducción: ${p.slice(0, 120)}` });
-    if (RE_FORMATO.test(p)) E.push({ tipo: "formato", parrafo: n, detalle: `Formato markdown/listas no permitido: ${p.slice(0, 80)}` });
+    // un título marcado en el inglés ("## ", "### ") debe conservar la misma marca en el español
+    const mEn = iguales ? marcaTitulo(en[i]) : null, mEs = marcaTitulo(p);
+    const sinMarca = mEn && mEs === mEn ? p.slice(mEn.length + 1) : p;
+    if (RE_FORMATO.test(sinMarca)) E.push({ tipo: "formato", parrafo: n, detalle: `Formato markdown/listas no permitido: ${p.slice(0, 80)}` });
+    if (iguales && (mEn || mEs) && mEn !== mEs)
+      E.push({ tipo: "titulo", parrafo: n, detalle: `El inglés ${mEn ? `es un título con "${mEn} "` : "no es un título"} y el español ${mEs ? `empieza con "${mEs} "` : "no tiene la marca"}: ${p.slice(0, 60)}` });
     if (iguales) {
       const ne = numeracion(en[i]), ns = numeracion(p);
       if (ne && ne !== ns)

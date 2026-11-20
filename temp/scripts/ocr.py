@@ -8,6 +8,9 @@ Comandos:
   pendientes <trabajo> [--max N]               Lotes con páginas sin transcribir, listos para lanzar agentes.
   validar <trabajo> [--paginas R]              Revisa cada transcripción contra la capa OCR del PDF.
   capa <trabajo> <pagina>                      Último recurso: escribe la capa OCR como transcripción (queda marcada).
+  limpiar <trabajo>                            Quita las cursivas en markdown (*texto*) de las transcripciones.
+  cortes <trabajo> [--alto 0.13]               Cortes entre páginas dudosos ([[sigue]] contra la puntuación),
+                                               con un recorte del inicio de cada página en cortes/.
   unir <trabajo> <salida.txt> [--paginas R]    Junta las páginas en un solo .txt (notas renumeradas).
 
 R es una lista de páginas del PDF contadas desde 1: "13-547" o "13-80,82-547".
@@ -30,6 +33,28 @@ MARCA_CAPA = "[[capa]]"
 SEP_NOTAS = "---NOTAS---"
 RE_LLAMADA = re.compile(r"\[(\d{1,3})\]")
 RE_NOTA = re.compile(r"^\[(\d{1,3}|sigue)\]\s*(.*)$")
+# cursiva en markdown: *texto* (el asterisco de apertura va tras inicio/espacio/signo, el de cierre antes de espacio/signo)
+RE_CURSIVA = re.compile(r"(^|[\s(\[\'\"—])\*(\S(?:[^*\n]*?\S)?)\*(?=$|[\s.,;:!?)\]\'\"—\[])", re.M)
+# frases del ejemplo de .claude/agents/ocr-transcriptor.md (actual y anteriores) que los agentes copiaron alguna vez
+FRASES_EJEMPLO = ["aaa bbb ccc", "hhh iii jjj", "kkk lll mmm", "texto de la nota uno",
+                  "scorpion is little, yet able to sting a lion to death",
+                  "should look so low as poor we", "love is like fire, very operative"]
+
+
+def en_capa(frase, pc):
+    """True si la mayoría de los pares de palabras de la frase están en la capa OCR (la frase es de esta página)."""
+    w = palabras(frase)
+    pares = set(zip(w, w[1:]))
+    capa = set(zip(pc, pc[1:]))
+    return bool(pares) and len(pares & capa) >= 0.5 * len(pares)
+# títulos: "## " = <h2> (obra, capítulo, división principal), "### " = <h3> (subdivisión)
+RE_TITULO = re.compile(r"^(##|###) +(.*)$")
+# fin de párrafo: punto, signo, comillas o paréntesis de cierre (las llamadas [n] se quitan antes)
+RE_FIN = re.compile(r"[.!?:'\"’”)\]]$")
+# referencia bíblica que cierra una cita de la página anterior: "Ps. lxxxix. 30", "Job xxi. 23", "1 Cor. iii. 4"
+RE_REFERENCIA = re.compile(r"^([1-3] )?[A-Z][a-z]+\.? [ivxlcIVXLC]+\.? ?\d")
+# inicio de una división numerada: "(4.)", "[2.]", "3.", "VI.", "Remedy (3).", "Obj. 2", "Reason 7."
+RE_DIVISION = re.compile(r"^(\(\d+\.?\)|\[\d+\.\]|\d+\.\s|[IVXL]+\.\s|(Device|Remedy|Reason|Duty|Use|Obj|Object|Ans|Answer|Motive|Means|Quest)\b)")
 
 
 # ---------- utilidades ----------
@@ -234,6 +259,16 @@ def tramos_ausentes(a, b, minimo, saltar_cabecera=False):
     return tramos, sm.ratio()
 
 
+def movido(tramo, otro):
+    """True si el tramo está en 'otro' en otro lugar (en bloques de 3+ palabras seguidas que cubren el 70 %).
+    Pasa cuando un título (## / ###) se movió antes de su párrafo: el texto no falta, cambió de sitio."""
+    if not tramo:
+        return False
+    sm = difflib.SequenceMatcher(None, tramo, otro, autojunk=False)
+    cubierto = sum(b.size for b in sm.get_matching_blocks() if b.size >= 3)
+    return cubierto >= 0.7 * len(tramo)
+
+
 def revisar_pagina(trabajo, n):
     errores, avisos = [], []
     pt = ruta(trabajo, "texto", n, ".txt")
@@ -251,10 +286,17 @@ def revisar_pagina(trabajo, n):
         return errores, avisos
 
     # formato
-    if re.search(r"\*\*|```|^(#|###+) ", texto, re.M):
+    if re.search(r"\*\*|```|^(#|####+) ", texto, re.M):
         errores.append("restos de markdown")
-    if re.search(r"(?i)\b(here is|transcription|transcripci[oó]n|listo)\b", texto[:200]) or re.search(r"(?i)(listo|done)\s*$", texto):
+    cursivas = RE_CURSIVA.findall(texto)
+    if cursivas:
+        errores.append("cursivas marcadas con asteriscos (%d); quítalas con 'limpiar'" % len(cursivas))
+    if (re.match(r"(?i)\s*(here is|here's)\b", texto) or re.search(r"(?i)\b(transcription|transcripci[oó]n|listo)\b", texto[:200])
+            or re.search(r"(?i)(listo|done)\s*$", texto)):
         errores.append("texto agregado por el agente (comentario o 'listo')")
+    for frase in FRASES_EJEMPLO:
+        if " ".join(palabras(frase)[:5]) in " ".join(palabras(texto)) and not en_capa(frase, pc):
+            errores.append("texto copiado del ejemplo de las instrucciones: «%s»" % frase)
     if texto.count(SEP_NOTAS) > 1:
         errores.append("%s aparece más de una vez" % SEP_NOTAS)
     if MARCA_SIGUE in texto and not texto.lstrip().startswith(MARCA_SIGUE):
@@ -290,12 +332,16 @@ def revisar_pagina(trabajo, n):
             errores.append("la transcripción tiene %d palabras y la capa OCR %d (%.0f%%): posible omisión" % (len(pt_), len(pc), proporcion * 100))
         elif proporcion > 1.15:
             avisos.append("la transcripción tiene %d palabras y la capa OCR %d (%.0f%%)" % (len(pt_), len(pc), proporcion * 100))
-        if ratio < 0.80:
+        if ratio < 0.45:
+            errores.append("parecido muy bajo con la capa OCR (%.2f): ¿es el texto de otra página?" % ratio)
+        elif ratio < 0.80:
             avisos.append("parecido bajo con la capa OCR (%.2f)" % ratio)
         for t in omitidos:
-            errores.append("posible omisión (está en la capa OCR): «%s»" % t[:120])
+            if not movido(t.split(), pt_):
+                errores.append("posible omisión (está en la capa OCR): «%s»" % t[:120])
         for t in agregados:
-            avisos.append("posible texto agregado (no está en la capa OCR): «%s»" % t[:120])
+            if not movido(t.split(), pc):
+                avisos.append("posible texto agregado (no está en la capa OCR): «%s»" % t[:120])
     elif len(pt_) > 80 and len(pc) < 10:
         avisos.append("la capa OCR está casi vacía; no se pudo comparar")
 
@@ -333,6 +379,131 @@ def cmd_validar(args):
     print("Páginas: %d | errores: %d | avisos: %d" % (len(paginas), total_e, total_a))
     if malas:
         print("Páginas con errores: " + ",".join(str(n) for n in malas))
+
+
+# ---------- limpiar ----------
+
+def cmd_limpiar(args):
+    """Quita las cursivas en markdown (*texto*) que a veces escriben los agentes."""
+    if not args:
+        salir("uso: limpiar <trabajo>")
+    trabajo = args[0]
+    m = manifiesto(trabajo)
+    total = 0
+    for n in m["paginas"]:
+        p = ruta(trabajo, "texto", n, ".txt")
+        if not os.path.exists(p):
+            continue
+        t = leer(p)
+        nuevo, k = t, 0
+        while True:
+            nuevo, j = RE_CURSIVA.subn(r"\1\2", nuevo)
+            if not j:
+                break
+            k += j
+        if k:
+            escribir(p, nuevo)
+            total += k
+            print("página %d: %d cursivas" % (n, k))
+    print("Cursivas quitadas: %d. Revisa los asteriscos que queden (pueden ser signos impresos):" % total)
+    print('  grep -n "\\*" "%s/texto/"*.txt' % trabajo)
+
+
+# ---------- cortes entre páginas ----------
+
+def cuerpo_pagina(trabajo, n):
+    t = leer(ruta(trabajo, "texto", n, ".txt")).replace(MARCA_CAPA, "").strip()
+    cuerpo, _ = partes(t)
+    return cuerpo
+
+
+def fin_de_parrafo(cuerpo):
+    """True si el último párrafo de la página termina como fin de párrafo (o es un título)."""
+    ultimo = [p for p in re.split(r"\n\s*\n", cuerpo) if p.strip()]
+    ultimo = ultimo[-1].strip() if ultimo else ""
+    if RE_TITULO.match(ultimo) or ultimo == MARCA_BLANCO:
+        return True
+    ultimo = re.sub(r"(\[\d+\])+$", "", ultimo).rstrip()
+    return bool(RE_FIN.search(ultimo))
+
+
+def cortes_dudosos(trabajo, paginas):
+    """Cortes entre páginas donde la marca [[sigue]] contradice la puntuación.
+    Devuelve [(n, tipo, final de la anterior, inicio de la página)]."""
+    dudosos = []
+    for a, n in zip(paginas, paginas[1:]):
+        if n != a + 1:
+            continue
+        previo, actual = cuerpo_pagina(trabajo, a), cuerpo_pagina(trabajo, n)
+        if MARCA_BLANCO in (previo, actual) or not previo or not actual:
+            continue
+        sigue = actual.startswith(MARCA_SIGUE)
+        inicio = actual[len(MARCA_SIGUE):].strip() if sigue else actual
+        if re.match(r"#{2,3} ", inicio) or previo.endswith("-"):
+            continue
+        termina = fin_de_parrafo(previo)
+        mayuscula = re.match(r"[A-Z]", inicio) is not None
+        if sigue and termina and mayuscula and not RE_REFERENCIA.match(inicio):
+            dudosos.append((n, "tiene [[sigue]] pero la anterior termina con punto", previo[-50:], inicio[:50]))
+        elif not sigue and not termina and not re.match(r"[a-z]", inicio) and not RE_DIVISION.match(inicio):
+            dudosos.append((n, "sin [[sigue]] pero la anterior queda a medias", previo[-50:], inicio[:50]))
+    return dudosos
+
+
+def cmd_cortes(args):
+    """Lista los cortes dudosos y recorta el inicio de cada página (cortes/pNNNN.png) para mirar la sangría."""
+    alto_recorte = float(opcion(args, "--alto", "0.13"))
+    ok = opcion(args, "--ok")
+    if not args:
+        salir("uso: cortes <trabajo> [--alto 0.13] [--ok 104,112,...]")
+    trabajo = args[0]
+    m = manifiesto(trabajo)
+    os.makedirs(os.path.join(trabajo, "cortes"), exist_ok=True)
+    p_rev = os.path.join(trabajo, "cortes", "revisados.txt")
+    revisados = set(int(x) for x in re.findall(r"\d+", leer(p_rev))) if os.path.exists(p_rev) else set()
+    if ok:
+        revisados |= set(rango(ok, max(m["paginas"])))
+        escribir(p_rev, "\n".join(str(n) for n in sorted(revisados)) + "\n")
+        print("Marcadas como revisadas: %s" % ok)
+    paginas = [n for n in m["paginas"] if transcrita(trabajo, n)]
+    dudosos = [d for d in cortes_dudosos(trabajo, paginas) if d[0] not in revisados]
+    if dudosos and fitz is None:
+        salir("falta PyMuPDF para hacer los recortes")
+    os.makedirs(os.path.join(trabajo, "cortes"), exist_ok=True)
+    for n, tipo, fin, inicio in dudosos:
+        img = ruta(trabajo, "paginas", n, ".png")
+        rec = ruta(trabajo, "cortes", n, ".png")
+        if os.path.exists(img) and not os.path.exists(rec):
+            src = fitz.open(img)
+            r = src[0].rect
+            src[0].get_pixmap(clip=fitz.Rect(0, 0, r.width, r.height * alto_recorte)).save(rec)
+        print("página %d: %s\n  …%s ‖ %s\n  recorte: %s" % (n, tipo, fin.replace("\n", " "), inicio.replace("\n", " "), rec))
+    # láminas de hasta 8 recortes con su número de página, para revisarlos de un vistazo
+    for f in os.listdir(os.path.join(trabajo, "cortes")):
+        if f.startswith("lamina_"):
+            os.remove(os.path.join(trabajo, "cortes", f))
+    laminas = []
+    for i in range(0, len(dudosos), 8):
+        grupo = [n for n, _, _, _ in dudosos[i:i + 8]]
+        ancho, alto_fila, etiqueta = 700, 0, 22
+        imgs = [fitz.Pixmap(ruta(trabajo, "cortes", n, ".png")) for n in grupo]
+        filas = [(n, px, ancho * px.height / float(px.width)) for n, px in zip(grupo, imgs)]
+        doc = fitz.open()
+        pag = doc.new_page(width=ancho, height=sum(h + etiqueta for _, _, h in filas))
+        y = 0
+        for n, px, h in filas:
+            pag.insert_text((6, y + 16), "p%04d" % n, fontsize=14, color=(0.8, 0, 0))
+            pag.insert_image(fitz.Rect(0, y + etiqueta, ancho, y + etiqueta + h), pixmap=px)
+            y += h + etiqueta
+        sal = os.path.join(trabajo, "cortes", "lamina_%02d.png" % (i // 8 + 1)).replace("\\", "/")
+        pag.get_pixmap().save(sal)
+        laminas.append(sal)
+    print()
+    for l in laminas:
+        print("lámina: " + l)
+    print("Cortes dudosos: %d (sin contar %d ya revisados). En cada recorte mira si el primer renglón tiene sangría:" % (len(dudosos), len(revisados)))
+    print("  con sangría = párrafo nuevo (sin [[sigue]]); pegado al margen = continúa (con [[sigue]]).")
+    print("  Corrige las marcas que estén mal y registra las correctas con --ok <páginas>.")
 
 
 # ---------- capa (último recurso) ----------
@@ -422,9 +593,11 @@ def cmd_unir(args):
         parrafos = [p.strip() for p in re.split(r"\n\s*\n", cuerpo) if p.strip()]
         for i, p in enumerate(parrafos):
             p = re.sub(r"\s*\n\s*", " ", p)
-            es_titulo = p.startswith("## ")
+            mt = RE_TITULO.match(p)
+            es_titulo = mt is not None
+            marca = mt.group(1) + " " if mt else ""
             if es_titulo:
-                p = p[3:].strip()
+                p = mt.group(2).strip()
                 volcar()
 
             def cambiar(mm):
@@ -438,8 +611,10 @@ def cmd_unir(args):
             p = normalizar(p)
 
             previo = salida_items[-1] if salida_items and isinstance(salida_items[-1], str) else None
-            continua = (i == 0 and previo is not None and not es_titulo and
-                        (sigue or previo.endswith("-") or (re.match(r"[a-z]", p) and not re.search(r"[.!?:'\"]\]?$", previo))))
+            previo_titulo = previo is not None and RE_TITULO.match(previo) is not None
+            previo_abierto = previo is not None and not previo_titulo and not RE_FIN.search(re.sub(r"(\[\d+\])+$", "", previo).rstrip())
+            continua = (i == 0 and previo is not None and not es_titulo and not previo_titulo and
+                        (sigue or previo.endswith("-") or (previo_abierto and re.match(r"[a-z]", p))))
             if continua:
                 if not sigue:
                     avisos.append("página %d: se unió al párrafo anterior sin [[sigue]] («%s»)" % (n, p[:40]))
@@ -448,7 +623,7 @@ def cmd_unir(args):
                 else:
                     salida_items[-1] = previo + " " + p
             else:
-                salida_items.append(("## " if es_titulo else "") + p)
+                salida_items.append(marca + p)
         sin_usar = [k for k, v in locales.items() if v not in pendientes and not any(isinstance(x, list) and v in x for x in salida_items)]
         for k in sin_usar:
             avisos.append("página %d: la nota [%d] no tiene llamada en el texto" % (n, k))
@@ -462,7 +637,7 @@ def cmd_unir(args):
             lineas.extend("[%d] %s" % (nota.numero, normalizar(nota.texto)) for nota in item)
             lineas.append("")
         else:
-            lineas.append(item[3:] if item.startswith("## ") else item)
+            lineas.append(item)
             lineas.append("")
     escribir(salida, "\n".join(lineas).strip() + "\n")
     for a in avisos:
@@ -477,6 +652,8 @@ COMANDOS = {
     "pendientes": cmd_pendientes,
     "validar": cmd_validar,
     "capa": cmd_capa,
+    "limpiar": cmd_limpiar,
+    "cortes": cmd_cortes,
     "unir": cmd_unir,
 }
 
