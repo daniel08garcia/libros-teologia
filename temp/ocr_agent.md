@@ -124,25 +124,27 @@ python temp/scripts/ocr.py limpiar "temp/trabajo/<nombre>"
 python temp/scripts/ocr.py validar "temp/trabajo/<nombre>"
 ```
 
-`limpiar` quita las cursivas que los agentes marcan con asteriscos (`*Remedy (2).*`), aunque las instrucciones lo prohíben: en el volumen 1 de Brooks hubo 96. Al final lista el comando para ver los asteriscos que quedan; revísalos, porque algunos son signos impresos (llamadas de nota del editor como `below.*`, `Carus*`) y se quedan. Un asterisco suelto al inicio de un párrafo (`*Object. 3.`) es resto de markdown: quítalo.
+`limpiar` quita las cursivas que los agentes marcan con asteriscos (`*Remedy (2).*`), guiones bajos (`_Remedy_`) o etiquetas (`<i>`), aunque las instrucciones lo prohíben: en los volúmenes 1, 2 y 3 de Brooks hubo 96, 77 y 48. También pasa a `[n]` las llamadas que el agente escribe como superíndice unicode (`die.²` → `die.[2]`). Al final lista el comando para ver los asteriscos que quedan; revísalos, porque algunos son signos impresos (llamadas de nota del editor como `below.*`, `Carus*`) y se quedan. Un asterisco suelto al inicio de un párrafo (`*Object. 3.`) es resto de markdown: quítalo.
 
-Puedes validar mientras los agentes siguen trabajando, con `--paginas` sobre las páginas ya terminadas, y corregir sobre la marcha.
+Puedes validar mientras los agentes siguen trabajando, con `--paginas` sobre las páginas ya terminadas, y corregir sobre la marcha. `limpiar`, en cambio, no tiene `--paginas` y recorre todo `texto/`: ejecútalo cuando hayan terminado todos los agentes. En el volumen 4 se ejecutó antes, y dos agentes que aún escribían vieron cambiar sus archivos en disco (no se perdió nada, pero es un riesgo).
 
 Por cada página `validar` revisa:
 
 | Control | Tipo |
 | --- | --- |
 | Falta la transcripción o está vacía | ERROR |
-| Restos de markdown, cursivas con asteriscos, comentarios del agente ("listo", "Here is" al inicio) | ERROR |
+| Restos de markdown, cursivas con asteriscos, llamadas en superíndice unicode (`²`), comentarios del agente ("listo", "Here is" al inicio) | ERROR |
 | Frases del ejemplo de las instrucciones del agente que no están en la capa OCR (texto copiado) | ERROR |
+| Nota `[sigue]` idéntica a una nota de la página anterior (repetida) | ERROR |
 | Parecido con la capa OCR menor a 0,45 (¿es el texto de otra página?) | ERROR |
 | `[[sigue]]` fuera de la primera línea, o `---NOTAS---` repetido | ERROR |
 | Llamadas `[n]` sin nota al pie, o notas sin llamada | ERROR |
 | Tramo de 8+ palabras de la capa OCR que falta en la transcripción | ERROR (posible omisión) |
 | La transcripción tiene menos del 85 % de las palabras de la capa | ERROR (posible omisión) |
-| Tramo de 8+ palabras que no está en la capa | aviso (posible texto agregado) |
+| Tramo de 8+ palabras que no está en la capa (sin contar los títulos `##`/`###`, que pueden venir del índice) | aviso (posible texto agregado) |
 | Más del 115 % de las palabras, parecido bajo con la capa, `[ilegible]`, notas desordenadas | aviso |
 | Página marcada `[[en blanco]]` pero la capa tiene texto | ERROR |
+| Salto en la numeración impresa (el número de página de la capa avanza de golpe y se mantiene): páginas que faltan en el escaneo | aviso, al final |
 
 La capa OCR también tiene errores, así que un aviso no siempre es un problema. Los tramos que `validar` cita sirven para ubicar el problema rápido.
 
@@ -158,9 +160,15 @@ Para cada página con ERROR:
    - Nota que sigue en un segundo párrafo, escrita como una línea aparte sin `[n]`: únela a la nota anterior.
    - Nota marcada con `*` en vez de número: dale el número que le toca en la página, en el texto y en la nota.
    - Nota inventada con una anotación a lápiz (`[*] [manuscrito ilegible]`): bórrala, con su llamada.
+   - Dos notas juntas en una línea (la segunda empieza a media línea con su número): sepáralas.
+   - Una enumeración del texto escrita como llamada (`[4] Fourthly`): es `[4.] Fourthly`, con punto, como esté impreso.
+   - Cifras entre corchetes en el texto que no son llamadas (Grosart completa un año: «in [15]88»): `validar` las toma por llamadas sin nota y `unir` las renumeraría. Escríbelas sin corchetes («in 1588»).
+   - Una línea del cuerpo puesta entre las notas (en Brooks, `END OF VOL. III.` al pie de la última página): pásala al cuerpo.
+   - Si hay varias páginas con notas sin llamada (en el volumen 3 fueron 8), puedes mandarlas a un agente `ocr-transcriptor` de corrección: dale la página, la nota y la orden de poner la llamada donde está impresa o, si no la hay, junto a la frase que la nota comenta. Revisa después cada cambio con `validar`.
 3. **Parecido muy bajo con la capa:** compara las primeras palabras de `texto/pNNNN.txt` con `capa/pNNNN.txt` y con las páginas vecinas. En Brooks, un agente escribió el texto de la página 515 en el archivo de la 516 y viceversa: se arregla intercambiando los dos archivos.
 4. **Texto copiado del ejemplo:** borra la línea copiada. Mira la imagen por si la página tenía algo real en ese lugar.
-5. **Falso positivo:** no hagas nada y menciónalo en el reporte. Los vistos hasta ahora:
+5. **Páginas que faltan en el escaneo:** `validar` avisa al final cuando la numeración impresa salta (en Brooks vol. 5, de la p. 39 a la 42). No hay texto que recuperar del PDF: quita el `[[sigue]]` de la página siguiente (si no, `unir` juntaría dos frases que no se conectan), pon al comienzo de esa página un párrafo `[FALTAN EN EL ESCANEO LAS PÁGINAS 40-41 DEL IMPRESO]` y avisa al usuario por si tiene otra copia. Si entre las dos páginas hay portadillas o notas sin número, el salto suele ser solo el reverso en blanco de una portadilla que no se escaneó: míralo y no hagas nada.
+6. **Falso positivo:** no hagas nada y menciónalo en el reporte. Los vistos hasta ahora:
    - Griego o hebreo, que la capa OCR lee como basura (`«ei idvva cui0 i ruv»`): aparece como "posible omisión" en casi todas las páginas con griego.
    - Una nota bien transcrita que la capa leyó con errores (`Koble` por `Noble`, `MenlirU` por `Mentiris`).
    - La capa leyó dos veces un renglón.
@@ -189,6 +197,12 @@ Luego registra las páginas que ya estaban bien, para que no vuelvan a salir: `c
 
 En el volumen 1 de Brooks hubo 18 casos, en 3 láminas: 3 `[[sigue]]` mal puestos (párrafos nuevos con sangría) y 15 correctos. Además había 5 páginas que empezaban con minúscula sin `[[sigue]]`; `unir` las une solas, pero conviene ponerles la marca para que los datos queden coherentes.
 
+**Revisión completa (`--todos`).** Agrega un tercer tipo de caso: la página no tiene `[[sigue]]`, empieza con mayúscula y la anterior termina con punto. Es la única forma de encontrar una continuación que el agente omitió cuando la frase anterior acaba justo al final de la página. En el volumen 3 dio 37 casos más (5 láminas) y los 37 eran párrafos nuevos: el agente no omitió ninguna continuación con mayúscula. En el volumen 4 dio 8 casos y uno era una continuación omitida (p. 285, «No heart but a sound heart…», pegado al margen). Como cuesta poco (1 a 5 láminas por libro), hazla siempre.
+
+**Escaneo sin sangrías visibles.** En algunas páginas mal escaneadas (Brooks vol. 3, p. 80) ningún párrafo muestra sangría, y el recorte engaña: parece un párrafo nuevo y no lo es. Si en la página entera ningún párrafo tiene sangría clara, decide por el contenido. Lee el final de la página anterior y el principio de esta: si es la misma oración o la misma idea ("…a fulness of redundance." / "There is an overflowing fulness in Christ…"), continúa. En el volumen 3, el orquestador quitó por error el `[[sigue]]` correcto de esa página y lo devolvió al revisar con `--todos`.
+
+**Recortes que engañan.** El recorte muestra solo 3 o 4 renglones. Si el primero parece pegado al margen pero la diferencia es de pocos píxeles, abre la página entera antes de cambiar nada: de 4 dudas del volumen 3, 3 tenían sangría normal en la página completa.
+
 La geometría de la capa OCR (la posición del primer renglón) **no** sirve para decidir esto de forma automática: se probó con las 535 páginas y el OCR a veces se salta el primer renglón o lo parte, así que daba unos 30 falsos resultados. La puntuación más los recortes es más fiable y barato.
 
 ### Paso 7: Títulos (`##` y `###`)
@@ -199,9 +213,11 @@ El `.txt` conserva los títulos marcados, y al publicar `sermones.js html` los c
 - **`### ` (h3):** las subdivisiones con etiqueta impresa que el índice enumera: `Device (n)`, `Reason n`, `Evil n`, `Motive (n)`, `Obj. n`, `Quest.`. No las enumeraciones menudas dentro de una subdivisión (`Remedy (n)`, `[1.]`, `(1.)`, las de un sermón corto): son demasiadas y llenarían la página de títulos.
 - **Texto del título:** la etiqueta tal como está impresa ("Reason (2).", "Object. 3.") más su enunciado, que es la primera oración del párrafo (la frase en cursiva), si tiene menos de unos 160 caracteres y ninguna llamada de nota. Si es más larga, usa el resumen del índice. La etiqueta pasa al título y se quita del párrafo; la primera oración también se quita del párrafo, porque ya está en el título. No inventes texto: todo sale del cuerpo o del índice.
 - **Etiqueta precedida de una frase introductoria** ("The third device that Satan hath to draw the soul to sin is," / "Device (3). By extenuating…"): el título va **antes** de la frase introductoria, y la primera oración se queda también en el párrafo. Si no, la lectura queda cortada: "…is," seguido de otra cosa.
+- **Serie de sermones sobre un texto** (en Brooks, *The Unsearchable Riches of Christ*, con siete doctrinas sacadas de Ef. 3:8): las doctrinas no llevan título impreso, sino que salen en el texto ("Obs. 1.", "Doct.", "The next observation…"). Pon un `## ` por doctrina con las palabras del índice ("The first doctrine.—Those that are lowest…") justo antes del párrafo que la empieza (o antes del versículo que repite el texto al comienzo del sermón). Las divisiones de cada doctrina (I. pruebas, II. propiedades, III. razones, IV. usos; los "Support n", "Use n") van como `### `.
+- **Enunciado con llamada de nota** ("Support 2. That God doth… done by them.[1]"): el título lleva la frase sin la llamada, y el párrafo queda entero, con la llamada. Así no se pierde ninguna nota, aunque la frase quede repetida.
 - **Sin índice** (un solo sermón o capítulo): basta con los títulos impresos. Si el sermón trae divisiones impresas como `DOCTRINE.`, `APPLICATION.` o `USE I.` en renglón aparte, pueden ir como `## `. Si no hay ninguna, el texto queda sin títulos internos.
 
-Hazlo con un script de una sola vez sobre `texto/`, con una copia de seguridad antes. Sin `--aplicar`, el script solo lista los títulos propuestos: revísalos antes de aplicar. Usa de modelo `temp/trabajo/brooks-titulos.py`: sus funciones `poner` (etiqueta + primera oración), `entero` (un párrafo corto entero pasa a título), `juntar` (dos párrafos forman un título) y `serie` (todas las etiquetas de un tipo en un rango de páginas, con las variantes impresas `Reason 4.`, `Reason (5).`, `Object. 3.`, `Objection (5).`) sirven para otros libros. Solo cambia la lista de páginas y etiquetas.
+Hazlo con un script de una sola vez sobre `texto/`, con una copia de seguridad antes. Sin `--aplicar`, el script solo lista los títulos propuestos: revísalos antes de aplicar. Usa de modelo `temp/trabajo/brooks-titulos.py`: sus funciones `poner` (etiqueta + primera oración), `entero` (un párrafo corto entero pasa a título), `juntar` (dos párrafos forman un título) y `serie` (todas las etiquetas de un tipo en un rango de páginas, con las variantes impresas `Reason 4.`, `Reason (5).`, `Object. 3.`, `Objection (5).`) sirven para otros libros. Solo cambia la lista de páginas y etiquetas. `temp/trabajo/brooks3-titulos.py` tiene una versión más limpia de esas funciones y agrega `insertar`: pone un título del índice antes de un párrafo sin tocarlo (para las doctrinas y las divisiones sin etiqueta impresa).
 
 Después vuelve a ejecutar `validar` y `cortes`. `validar` ya no da error por el texto que solo cambió de lugar (la etiqueta y la frase que pasaron al título). `cortes` puede listar una página que ahora empieza con el párrafo que sigue a un título: regístrala con `--ok`.
 
@@ -256,20 +272,40 @@ Como cada página va en su archivo, un bloqueo no hace perder las demás página
 
 ### Errores frecuentes del agente transcriptor
 
-Vistos en el volumen 1 de Brooks (535 páginas). Las instrucciones del agente ya los prohíben, pero Haiku los repite de vez en cuando; por eso existen los controles de `limpiar`, `validar` y `cortes`.
+Vistos en los volúmenes 1 a 6 de Brooks (535, 533, 504, 446, 594 y 457 páginas). Las instrucciones del agente ya los prohíben, pero Haiku los repite de vez en cuando; por eso existen los controles de `limpiar`, `validar` y `cortes`. Las columnas de los volúmenes 2 a 6 muestran el efecto de las mejoras hechas después de cada libro.
 
-| Error | Cuántas veces | Cómo se detecta |
-| --- | --- | --- |
-| Cursivas con asteriscos (`*To dwell upon…*`) | 96 pares en 30 páginas | `limpiar` los quita; `validar` da ERROR si quedan |
-| Copia una línea del ejemplo de sus instrucciones (`[sigue] scorpion is little…`) en una página que no la tiene | 1 (y otro agente lo hizo y lo corrigió él mismo) | `validar`: "texto copiado del ejemplo". Desde entonces el ejemplo usa palabras de relleno (`aaa bbb ccc`) |
-| Escribe el texto de dos páginas en los archivos cruzados | 1 par (515/516) | `validar`: parecido muy bajo con la capa |
-| Transcribe una anotación a lápiz como nota (`[*] [manuscrito ilegible]`) | 1 | `validar`: línea de notas sin número |
-| `[[sigue]]` en un párrafo nuevo con sangría | 3 | `cortes` |
-| Falta `[[sigue]]` en una página que continúa | 5 (todas con minúscula inicial) | `unir` las une igual; `cortes` lista las que empiezan con mayúscula |
-| Llamada de nota repetida o ausente | 5 | `validar`: llamadas sin nota / notas sin llamada |
-| Nota de dos párrafos partida en dos líneas | 1 | `validar`: línea de notas sin número |
+| Error | Vol. 1 | Vol. 2 | Vol. 3 | Vol. 4 | Vol. 5 | Vol. 6 | Cómo se detecta |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Cursivas con asteriscos, guiones bajos o etiquetas (`*To dwell*`, `_To dwell_`, `<i>`) | 96 (asteriscos) | 77 (sobre todo guiones bajos; muchos agentes los corrigieron solos) | 48 | 24 | 13 (y otras tantas corregidas por los propios agentes) | 22 (y otras corregidas por los propios agentes) | `limpiar` los quita (los tres tipos); `validar` da ERROR si quedan |
+| Llamada escrita como superíndice unicode (`²`) | — | — | 1 (p. 57) | 0 | 0 | 0 | `limpiar` la pasa a `[n]`; `validar` da ERROR si queda |
+| Copia una línea del ejemplo de sus instrucciones (`[sigue] scorpion is little…`) en una página que no la tiene | 1 | 0 (el ejemplo ahora usa palabras de relleno) | 0 | 0 | 0 | 0 | `validar`: "texto copiado del ejemplo" |
+| Escribe el texto de dos páginas en los archivos cruzados | 1 par (515/516) | 0 | 0 | 0 | 0 | 0 | `validar`: parecido muy bajo con la capa |
+| Repite al inicio de sus notas una nota `[sigue]` de la página anterior | — | 1 (p. 513) | 0 | 0 | 0 | 0 | `validar`: "la nota [sigue] repite una nota de la página anterior" |
+| Numera mal las notas: toma la nota 1 por continuación (`[sigue]`) y corre las demás, o junta dos notas en una línea | — | 1 (p. 533) | 1 (p. 322, dos notas juntas) | 0 | 0 | 0 | `validar`: llamadas sin nota. Mira la imagen |
+| Escribe una enumeración como llamada (`[4] Fourthly` por `[4.]`) | — | — | 1 (p. 262) | 0 | 1 (p. 499) | 0 | `validar`: llamada sin nota |
+| Pone una línea del cuerpo entre las notas (`END OF VOL. III.`) | — | — | 1 (p. 510) | 0 | 0 | 0 | `validar`: línea de notas sin número |
+| Omite texto del cuerpo | 0 | 1 renglón (p. 308) | 0 | 1 (p. 236: los dos últimos párrafos; el agente se detuvo en un "But,") | 0 | 1 (p. 265: el último párrafo y su nota) | `validar`: posible omisión |
+| Transcribe una anotación a lápiz como nota (`[*] [manuscrito ilegible]`) | 1 | 0 | 0 | 0 | 0 | 0 | `validar`: línea de notas sin número |
+| `[[sigue]]` en un párrafo nuevo con sangría | 3 de 18 cortes dudosos | 0 de 10 | 4 de 20 | 1 de 18 | 1 de 21 | 2 de 17 | `cortes` |
+| Falta `[[sigue]]` en una página que continúa | 5 (todas con minúscula inicial) | 3 (ídem) | 2 (ídem); 0 con mayúscula entre 37 revisadas con `--todos` | 3 con minúscula; 1 con mayúscula (p. 285) entre 8 de `--todos` | 3 con minúscula; 3 con mayúscula (p. 135 con `cortes`; 160 y 516 con `--todos`) | 7 con minúscula; 1 con mayúscula (p. 412) entre 17 de `--todos` | `unir` une las de minúscula; `cortes` (y `--todos`) lista las que empiezan con mayúscula |
+| Llamada de nota repetida, ausente o nota sin llamada impresa | 5 | 6 | 8 notas sin llamada (corregidas con un agente de corrección) | 1 llamada sin nota (p. 67) | 0 del agente (2 casos del impreso: nota sin llamada en p. 408, llamada sin nota en p. 581) | 0 del agente (1 caso del impreso: «[15]88», año completado por Grosart, que parece llamada) | `validar`: llamadas sin nota / notas sin llamada |
+| Nota de dos párrafos partida en dos líneas | 1 | 1 (p. 422, una referencia que era parte de la nota anterior) | 0 | 0 | 0 | 0 | `validar`: línea de notas sin número |
+| Se salta una página del lote (no escribe su archivo) | — | — | — | 1 (p. 160; lo avisó el agente) | 0 | 0 | `pendientes` la lista; lánzala sola |
+| Pasa a `[1]` el `*` impreso de la nota del editor sobre la portada | — | — | — | 1 (p. 5) | 0 (3 portadas con `*`, bien copiadas) | 0 (pero marcó como `## ` la portada citada en una NOTE) | Revisa `grep "\*"`; ya está en las instrucciones del agente |
+| Junta todo el índice (CONTENTS) en un solo párrafo | — | — | — | 1 (p. 2–3, sin sangrías) | 0 | 0 | Mira `indice.txt`; ya está en las instrucciones del agente |
+| Escribe páginas que no son de su lote (sobrescribe el trabajo de otro agente) | — | — | — | — | 1 (p. 563-564; lo avisó) | 0 | `validar` las páginas afectadas; ya está en las instrucciones del agente |
+
+En el volumen 3 se vio por qué fallaba `[[sigue]]`: varios agentes lo decidían suponiendo cómo terminaba la página anterior, que no tienen delante, en vez de mirar la sangría. Las instrucciones del agente ahora dicen que se decide **solo** por la sangría de la página.
+
+Casos del impreso que parecen errores y no lo son (vistos en el volumen 2):
+- **La misma llamada para varias frases:** el impreso pone "¹" en cinco frases de una página y una sola nota ("Clarke, as before"). Todas llevan `[1]`.
+- **Llamada dentro de otra nota:** una nota del editor remite a otra con un superíndice; `validar` dice "nota sin llamada en el texto". Es falso positivo, y `unir` pone esa nota al final del bloque.
 
 El agente avisa en su respuesta de la mayoría de sus dudas (`listo — dudas: …`). Léelas: suelen señalar justo las páginas que después fallan en `validar`.
+
+Errores que solo aparecieron al traducir el volumen 1 (los señalaron los traductores):
+- **"l" romana leída como "1" en las referencias:** `Isa. 1. 11`, `Jer. 1. 6` y `Ps. 1. 21` son `Isa. l. 11`, `Jer. l. 6` y `Ps. l. 21` (capítulo 50). El capítulo 1 se escribe `i.` en todo el libro, así que un `1.` entre el libro y el versículo es casi siempre este error. Búscalos con `grep -nE "\b[A-Z][a-z]+\.? 1\. [0-9]" <libro>.txt` antes de entregar el texto.
+- **Versículo imposible:** `Rom. xiv 33` por `Rom. xiv. 23` (Romanos 14 tiene 23 versículos). Es difícil de detectar con un script; los traductores lo notan.
 
 ### Tipografía y diseño
 
@@ -317,3 +353,8 @@ Un renglón por libro transcrito, con lo que dejó de nuevo. Agrega el tuyo al t
 | Fecha | Libro | Páginas | Resultado y lecciones |
 | --- | --- | --- | --- |
 | 2026-11 | Brooks, *Complete Works* vol. 1 (Grosart, 1866) | 13–547 (535) | 107 lotes, 2 365 párrafos, 1 328 notas. Errores del agente: cursivas con asteriscos, una línea copiada del ejemplo, dos páginas cruzadas, `[[sigue]]` mal puesto. De aquí salieron `limpiar`, `cortes`, los controles nuevos de `validar`, el ejemplo con palabras de relleno y el paso de títulos (índice aparte en `indice.txt`; 69 títulos `##` y 95 `###`, con `brooks-titulos.py`). Quedaron 13 falsos positivos de `validar` (griego y hebreo de la capa) y 74 `[griego]`/`[hebreo]`. |
+| 2026-11 | Brooks, *Complete Works* vol. 2 | 7–539 (533) | Primera prueba de las mejoras. 107 lotes, 1 922 párrafos, 1 120 notas; ~46 000 tokens por lote, como antes. `validar` pasó de 11 falsos positivos a 3, y de unos 15 errores reales a 10 (notas y una omisión); 0 textos copiados del ejemplo y 0 páginas cruzadas; los 10 cortes dudosos estaban bien. Errores nuevos: cursivas con guiones bajos y `<i>` (añadidas a `limpiar`) y una nota `[sigue]` repetida de la página anterior (control nuevo en `validar`). Títulos: 25 `##` y 62 `###` con `brooks2-titulos.py`; en *Heaven on Earth* solo capítulos, porque sus divisiones internas no tienen marcas regulares. |
+| 2026-11 | Brooks, *Complete Works* vol. 3 | 7–510 (504) | Segunda prueba de las mejoras. ~101 lotes, 1 972 párrafos, 867 notas; ~45 000–55 000 tokens por lote. `validar` dejó 3 falsos positivos (griego y una nota con renglones desordenados en la capa) y ninguna omisión real; 0 textos copiados del ejemplo, 0 páginas cruzadas, 0 notas `[sigue]` repetidas. Cursivas: 48 (de 96 y 77). Errores que quedan: 4 `[[sigue]]` en párrafos nuevos (causa: el agente suponía cómo acababa la página anterior; regla nueva en el agente), 8 notas sin llamada, 2 notas juntas o mal numeradas, una línea del cuerpo entre las notas. Primera revisión `cortes --todos`: 37 casos, ninguna continuación omitida. Nuevo en `limpiar`/`validar`: superíndices unicode → `[n]`. Títulos: 20 `##` y 90 `###` con `brooks3-titulos.py` (siete doctrinas de *Unsearchable Riches* con títulos del índice; máximas y divisiones de *A Cabinet of Jewels*). |
+| 2026-11 | Brooks, *Complete Works* vol. 4 (*The Crown and Glory of Christianity*) | 4–449 (446) | Tercera prueba de las mejoras. 90 lotes (más el índice y una página repetida), 742 párrafos (el libro tiene párrafos muy largos: 84 páginas son un solo párrafo, comprobado con la imagen), 754 notas; ~40 000–60 000 tokens por lote. `validar` dejó un solo falso positivo (griego). Cursivas: 24 (de 96, 77 y 48). 0 textos copiados, 0 páginas cruzadas, 0 notas mal numeradas o juntas. Errores nuevos: una página saltada por un agente (lo avisó), una omisión al final de página (los dos últimos párrafos; `validar` la detectó por el 70 % de palabras), el `*` de la portada pasado a `[1]` y el índice en un solo párrafo; los tres últimos están ya en las instrucciones del agente. Cortes: 1 `[[sigue]]` de más entre 18 y 1 continuación omitida con mayúscula entre 8 de `--todos`. Títulos: 11 `##` y 28 `###` con `brooks4-titulos.py` (un solo tratado: doctrina, usos, objeciones y posiciones). |
+| 2026-11 | Brooks, *Complete Works* vol. 5 (*The Golden Key*, *Paradise Opened*, *A Word in Season*) | 3–596 (594) | 119 lotes; 1 173 párrafos, 835 notas; ~40 000–68 000 tokens por lote. `validar`: 4 falsos positivos (griego y el colofón final), 0 omisiones, 0 textos copiados, 0 páginas cruzadas. Cursivas: 13 (los agentes corrigieron muchas solos). Nuevo: el escaneo no trae las pp. 40-41 del impreso (lo avisó un agente; ahora `validar` revisa la numeración impresa y avisa de estos huecos); un agente escribió dos páginas de otro lote (lo avisó; regla nueva en el agente). Cortes: 1 `[[sigue]]` de más entre 21; 3 continuaciones con mayúscula sin marca (una con `cortes`, dos solo con `--todos`). Títulos: 14 `##` y 22 `###` con `brooks5-titulos.py` (preguntas y 11 *pleas* de *The Golden Key*/*Paradise Opened*; divisiones de *The Signal Presence of God*). |
+| 2026-11 | Brooks, *Complete Works* vol. 6 (*London's Lamentations* y seis sermones o tratados breves) | 8–464 (457) | Sin la «Editorial Postscript» de Grosart (pp. 2–5) ni los índices generales (465–508). 92 lotes; 1 280 párrafos, 543 notas; ~35 000–62 000 tokens por lote. `validar`: 1 falso positivo; 1 omisión real (último párrafo y nota de la p. 265, otra vez al final de página pese a la regla nueva). Cursivas: 22. Lo que más falló fue `[[sigue]]`: 7 páginas que empiezan en minúscula a media frase quedaron sin la marca (los agentes creyeron ver sangría; `unir` las une igual) y 2 marcas de más; `--todos` encontró 1 continuación omitida con mayúscula. Nuevo: un año entre corchetes («[15]88») que parecía llamada de nota. Títulos: 29 `##` y 23 `###` con `brooks6-titulos.py` (secciones de *London's Lamentations* según el índice; 12 máximas del *Heavenly Cordial*). |

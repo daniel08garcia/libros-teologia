@@ -112,7 +112,7 @@ def entero(n,rx,nivel,prefijo_quitar=None):
 def juntar(n,rx,nivel):
     """el párrafo y el siguiente forman el título"""
     d=pag(n); i=buscar(n,rx)
-    t=re.sub(r"^#+ ","",d['pars'][i])+' '+d['pars'][i+1]
+    t=re.sub(r"^#+ ","",d['pars'][i])+' '+re.sub(r"^#+ ","",d['pars'][i+1])
     ORDEN.append((n,nivel+' '+t))
     if APLICAR: d['pars'][i:i+2]=[nivel+' '+t]
 def serie(desde,hasta,rxlab,nivel,etq,titulos=None):

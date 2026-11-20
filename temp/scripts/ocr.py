@@ -8,8 +8,8 @@ Comandos:
   pendientes <trabajo> [--max N]               Lotes con páginas sin transcribir, listos para lanzar agentes.
   validar <trabajo> [--paginas R]              Revisa cada transcripción contra la capa OCR del PDF.
   capa <trabajo> <pagina>                      Último recurso: escribe la capa OCR como transcripción (queda marcada).
-  limpiar <trabajo>                            Quita las cursivas en markdown (*texto*) de las transcripciones.
-  cortes <trabajo> [--alto 0.13]               Cortes entre páginas dudosos ([[sigue]] contra la puntuación),
+  limpiar <trabajo>                            Quita las cursivas en markdown (*texto*) y pasa las llamadas ¹ ² a [n].
+  cortes <trabajo> [--alto 0.13] [--todos]     Cortes entre páginas dudosos ([[sigue]] contra la puntuación),
                                                con un recorte del inicio de cada página en cortes/.
   unir <trabajo> <salida.txt> [--paginas R]    Junta las páginas en un solo .txt (notas renumeradas).
 
@@ -33,8 +33,10 @@ MARCA_CAPA = "[[capa]]"
 SEP_NOTAS = "---NOTAS---"
 RE_LLAMADA = re.compile(r"\[(\d{1,3})\]")
 RE_NOTA = re.compile(r"^\[(\d{1,3}|sigue)\]\s*(.*)$")
-# cursiva en markdown: *texto* (el asterisco de apertura va tras inicio/espacio/signo, el de cierre antes de espacio/signo)
-RE_CURSIVA = re.compile(r"(^|[\s(\[\'\"—])\*(\S(?:[^*\n]*?\S)?)\*(?=$|[\s.,;:!?)\]\'\"—\[])", re.M)
+# cursiva en markdown: *texto* o _texto_ (la marca de apertura va tras inicio/espacio/signo, la de cierre antes de espacio/signo)
+VOLADOS = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
+RE_VOLADO = re.compile(r"[⁰¹²³⁴⁵⁶⁷⁸⁹]+")
+RE_CURSIVA = re.compile(r"(^|[\s(\[\'\"—])([*_])(\S(?:[^*_\n]*?\S)?)\2(?=$|[\s.,;:!?)\]\'\"—\[])", re.M)
 # frases del ejemplo de .claude/agents/ocr-transcriptor.md (actual y anteriores) que los agentes copiaron alguna vez
 FRASES_EJEMPLO = ["aaa bbb ccc", "hhh iii jjj", "kkk lll mmm", "texto de la nota uno",
                   "scorpion is little, yet able to sting a lion to death",
@@ -286,11 +288,13 @@ def revisar_pagina(trabajo, n):
         return errores, avisos
 
     # formato
-    if re.search(r"\*\*|```|^(#|####+) ", texto, re.M):
+    if re.search(r"\*\*|```|^(#|####+) |</?(i|em|b|strong|u)>", texto, re.M | re.I):
         errores.append("restos de markdown")
     cursivas = RE_CURSIVA.findall(texto)
     if cursivas:
         errores.append("cursivas marcadas con asteriscos (%d); quítalas con 'limpiar'" % len(cursivas))
+    if RE_VOLADO.search(texto):
+        errores.append("llamadas de nota en superíndice (¹ ²); pásalas a [n] con 'limpiar'")
     if (re.match(r"(?i)\s*(here is|here's)\b", texto) or re.search(r"(?i)\b(transcription|transcripci[oó]n|listo)\b", texto[:200])
             or re.search(r"(?i)(listo|done)\s*$", texto)):
         errores.append("texto agregado por el agente (comentario o 'listo')")
@@ -321,12 +325,24 @@ def revisar_pagina(trabajo, n):
             errores.append("notas sin llamada en el texto: %s" % sin_llamada)
     if numeros != sorted(numeros):
         avisos.append("las notas no están en orden: %s" % numeros)
+    # una nota [sigue] copiada tal cual de la página anterior (el agente la repitió)
+    previa = ruta(trabajo, "texto", n - 1, ".txt")
+    if "[sigue]" in notas and os.path.exists(previa):
+        _, notas_prev = partes(leer(previa))
+        cola = lambda l: re.sub(r"^\[(\d+|sigue)\]\s*", "", l.strip())
+        prev = set(cola(l) for l in notas_prev.splitlines() if l.strip())
+        for l in notas.splitlines():
+            if l.strip().startswith("[sigue]") and len(cola(l)) > 20 and cola(l) in prev:
+                errores.append("la nota [sigue] repite una nota de la página anterior: «%s»" % cola(l)[:60])
 
     # cobertura contra la capa OCR
     pt_ = palabras(re.sub(r"\[\[[^\]]*\]\]|\[(\d+|sigue|ilegible|griego|hebreo)\]|" + re.escape(SEP_NOTAS), " ", texto))
     if len(pc) >= 40:
         omitidos, ratio = tramos_ausentes(pc, pt_, 8, saltar_cabecera=True)
-        agregados, _ = tramos_ausentes(pt_, pc, 8)
+        # los títulos (## / ###) pueden venir del índice del libro: no cuentan como texto agregado
+        sin_titulos = "\n".join(l for l in texto.splitlines() if not RE_TITULO.match(l))
+        pt_st = palabras(re.sub(r"\[\[[^\]]*\]\]|\[(\d+|sigue|ilegible|griego|hebreo)\]|" + re.escape(SEP_NOTAS), " ", sin_titulos))
+        agregados, _ = tramos_ausentes(pt_st, pc, 8)
         proporcion = len(pt_) / float(len(pc))
         if proporcion < 0.85:
             errores.append("la transcripción tiene %d palabras y la capa OCR %d (%.0f%%): posible omisión" % (len(pt_), len(pc), proporcion * 100))
@@ -376,9 +392,47 @@ def cmd_validar(args):
         total_e += len(errores)
         total_a += len(avisos)
     print()
+    for aviso in saltos_numeracion(trabajo, paginas):
+        print("aviso " + aviso)
     print("Páginas: %d | errores: %d | avisos: %d" % (len(paginas), total_e, total_a))
     if malas:
         print("Páginas con errores: " + ",".join(str(n) for n in malas))
+
+
+def numero_impreso(trabajo, n):
+    """Número de página impreso según la capa OCR (un número solo en los primeros renglones)."""
+    p = ruta(trabajo, "capa", n, ".txt")
+    if not os.path.exists(p):
+        return None
+    for linea in leer(p).splitlines()[:4]:
+        m = re.fullmatch(r"\s*(\d{1,4})\s*", linea)
+        if m:
+            return int(m.group(1))
+    return None
+
+
+def saltos_numeracion(trabajo, paginas):
+    """Páginas que faltan (o sobran) en el escaneo: la diferencia entre el número impreso y el
+    del PDF cambia y se mantiene en las dos páginas siguientes (así se ignoran los errores del OCR)."""
+    nums = [(n, numero_impreso(trabajo, n)) for n in paginas]
+    nums = [(n, k - n) for n, k in nums if k is not None]
+    avisos = []
+    for i in range(1, len(nums) - 2):
+        antes, ahora = nums[i - 1][1], nums[i][1]
+        if ahora != antes and nums[i + 1][1] == ahora and nums[i + 2][1] == ahora \
+                and (i < 2 or nums[i - 2][1] == antes):
+            n0, n1 = nums[i - 1][0], nums[i][0]
+            dif = ahora - antes
+            if abs(dif) > 20:  # el OCR leyó mal varias cifras seguidas (352 -> 852)
+                continue
+            que = "faltan %d páginas del impreso" % dif if dif > 0 else "el impreso retrocede %d páginas (¿repetidas?)" % -dif
+            if n1 - n0 > 1:  # entre ambas hay páginas sin número (portadillas, notas)
+                que += " (hay páginas sin número en medio: puede ser solo una página en blanco no escaneada; míralo)"
+            else:
+                que += "; no pongas [[sigue]] en ese corte, marca el hueco en el texto y avisa al usuario"
+            avisos.append("numeración impresa: entre p%04d (impresa %d) y p%04d (impresa %d) %s"
+                          % (n0, n0 + antes, n1, n1 + ahora, que))
+    return avisos
 
 
 # ---------- limpiar ----------
@@ -395,15 +449,20 @@ def cmd_limpiar(args):
         if not os.path.exists(p):
             continue
         t = leer(p)
-        nuevo, k = t, 0
+        nuevo, k = re.subn(r"</?(i|em|b|strong|u)>", "", t, flags=re.I)  # etiquetas HTML de cursiva
         while True:
-            nuevo, j = RE_CURSIVA.subn(r"\1\2", nuevo)
+            nuevo, j = RE_CURSIVA.subn(r"\1\3", nuevo)
             if not j:
                 break
             k += j
-        if k:
+        # llamadas de nota escritas como superíndice unicode (²) -> [2]
+        nuevo, s = RE_VOLADO.subn(lambda v: "[%s]" % v.group(0).translate(VOLADOS), nuevo)
+        if s:
+            print("página %d: %d llamadas en superíndice pasadas a [n]" % (n, s))
+        if k or s:
             escribir(p, nuevo)
             total += k
+        if k:
             print("página %d: %d cursivas" % (n, k))
     print("Cursivas quitadas: %d. Revisa los asteriscos que queden (pueden ser signos impresos):" % total)
     print('  grep -n "\\*" "%s/texto/"*.txt' % trabajo)
@@ -427,7 +486,7 @@ def fin_de_parrafo(cuerpo):
     return bool(RE_FIN.search(ultimo))
 
 
-def cortes_dudosos(trabajo, paginas):
+def cortes_dudosos(trabajo, paginas, todos=False):
     """Cortes entre páginas donde la marca [[sigue]] contradice la puntuación.
     Devuelve [(n, tipo, final de la anterior, inicio de la página)]."""
     dudosos = []
@@ -447,6 +506,8 @@ def cortes_dudosos(trabajo, paginas):
             dudosos.append((n, "tiene [[sigue]] pero la anterior termina con punto", previo[-50:], inicio[:50]))
         elif not sigue and not termina and not re.match(r"[a-z]", inicio) and not RE_DIVISION.match(inicio):
             dudosos.append((n, "sin [[sigue]] pero la anterior queda a medias", previo[-50:], inicio[:50]))
+        elif todos and not sigue and termina and mayuscula and not RE_DIVISION.match(inicio):
+            dudosos.append((n, "sin [[sigue]], la anterior termina con punto (revisión completa)", previo[-50:], inicio[:50]))
     return dudosos
 
 
@@ -454,6 +515,9 @@ def cmd_cortes(args):
     """Lista los cortes dudosos y recorta el inicio de cada página (cortes/pNNNN.png) para mirar la sangría."""
     alto_recorte = float(opcion(args, "--alto", "0.13"))
     ok = opcion(args, "--ok")
+    todos = "--todos" in args
+    if todos:
+        args.remove("--todos")
     if not args:
         salir("uso: cortes <trabajo> [--alto 0.13] [--ok 104,112,...]")
     trabajo = args[0]
@@ -466,7 +530,7 @@ def cmd_cortes(args):
         escribir(p_rev, "\n".join(str(n) for n in sorted(revisados)) + "\n")
         print("Marcadas como revisadas: %s" % ok)
     paginas = [n for n in m["paginas"] if transcrita(trabajo, n)]
-    dudosos = [d for d in cortes_dudosos(trabajo, paginas) if d[0] not in revisados]
+    dudosos = [d for d in cortes_dudosos(trabajo, paginas, todos) if d[0] not in revisados]
     if dudosos and fitz is None:
         salir("falta PyMuPDF para hacer los recortes")
     os.makedirs(os.path.join(trabajo, "cortes"), exist_ok=True)

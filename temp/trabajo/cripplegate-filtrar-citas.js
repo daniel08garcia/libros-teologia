@@ -13,7 +13,7 @@ const simular = process.argv.includes("--simular");
 if (!dir) { console.error("uso: node temp/trabajo/cripplegate-filtrar-citas.js <trabajo> [--simular]"); process.exit(1); }
 const F = path.join(dir, "fragmentos");
 
-const ES_CITA = /RV|Reina|1960/i;
+const ES_CITA = /\bRV|Reina|1960/i; // \b: que "enervar" no cuente como RV
 const ES_SENTIDO = /omit|falt|sentido|negaci|invert|pronombre|agreg|restaur/i;
 
 let total = 0, quitadas = 0, archivos = 0;

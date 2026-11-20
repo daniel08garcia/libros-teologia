@@ -242,6 +242,98 @@ Lecciones de la serie 1:
 - Los nombres de archivo largos se cortan solos con " ---" (máximo 70 caracteres), como en el resto del proyecto, para no pasar el límite de rutas de Windows.
 - `"versiculo": "unido"` corta en el último guion seguido de espacio. Así "Heb. 6:4—6" queda completo.
 
+### 4.2. Obras completas de un autor transcritas con OCR
+
+**Ejemplo: _The Complete Works of Thomas Brooks_** (Grosart, 6 volúmenes; el vol. 1 trae la biografía de Brooks y cuatro obras). Se publica **una carpeta por obra** en `siglo/XVII/Thomas Brooks/<Obra>/`, con un HTML por división principal (capítulo, artimaña, objeción). La epístola y el prólogo al lector van con id `0`. La biografía del editor va aparte, en la carpeta del autor (`Vida De Thomas Brooks`). El prefacio del editor y los documentos del apéndice de la biografía no se publican.
+
+Herramientas, todas en `temp/trabajo/`:
+
+- `brooks-preparar.py <vol>`: corta el `.txt` del OCR en piezas, por rangos de líneas fijados a mano en el script (uno por HTML), y escribe `original-marcado.txt` y `plan.json`, con destino, fecha, id, `saltar_parrafos`, `versiculo` y título original de cada pieza. Además hace dos cosas:
+  - Pasa cada nota del bloque `__________` a su propio párrafo, porque el README pide un `<p>` por nota.
+  - En la primera artimaña de cada grupo, mueve el encabezado del grupo (`## II. Las diversas artimañas…`) después del de la artimaña (`### Artimaña (1)…`). Así `saltar_parrafos: 1` quita solo el título de la artimaña, que va en el `<h1>`, y el del grupo queda como `<h2>`.
+- `brooks-manifiesto.py <vol>`: después de `dividir --multiple`, copia `plan.json` al manifiesto.
+- `brooks-traductor.md`, `brooks-revisor.md`: las instrucciones de los agentes.
+- `brooks-siguiente.js <vol> <N> [--revisar]`: entrega los siguientes N lotes y lleva el registro de los lanzados (ver las lecciones del volumen 2). Reemplaza el uso manual de `brooks-lotes.js` mientras hay agentes en curso.
+- `brooks-lotes.js <vol> [--revisar] [--excluir claves]`: lista los lotes pendientes. **Lanza exactamente los lotes que imprime**: al armarlos a mano se quedó fuera un fragmento (s16-f005), que solo apareció con `estado`.
+- `brooks-llamadas.md`: instrucciones para un agente que **solo repone llamadas de nota `[n]`** perdidas dentro del texto. Es más barato y seguro que retraducir el fragmento.
+- `brooks-titulos-trad.js <vol> [--simular]`: después de `unir`, pone `titulo` (sacado de `### Artimaña (n). …` / `### Obj. n. …`, o fijado a mano en `TITULOS`), `titulo_original` (título de la obra + encabezado inglés) y `versiculo: "unido"` donde corresponde.
+- `brooks-comillas.js <vol> [--simular]`: cambia las citas entre comillas simples a «», el estilo de la biblioteca, sin tocar apóstrofos ingleses (`Fuller's`).
+
+Lecciones del volumen 1 (334 fragmentos, 78 HTML):
+
+- **Llamadas de nota perdidas.** Fue el error estructural más común: 28 fragmentos perdieron las `[n]` del texto (s08-f001 perdió las 9) y conservaron los párrafos de las notas. Se repararon con `brooks-llamadas.md`. El traductor ahora tiene una regla que le pide contarlas antes de escribir.
+- **Errores del OCR en referencias.** La "l" romana (50) se lee como "1": `Isa. 1. 11` es `Isa. l. 11`, y `Jer. 1. 6` / `Ps. 1. 21` igual. Los traductores lo señalaron. Búscalos en el original con `grep -nE "(Isa|Jer|Ps|Psalm)\.? 1\. [0-9]"`. Antes de traducir, revisa también `xiv 33` y otros versículos imposibles.
+- **El filtro de citas** separaba por error correcciones cuyo motivo contenía "rv" dentro de una palabra ("ene**rv**ar"). Ahora busca `\bRV`.
+- **Revisores con falsos cognados del siglo XVII**: "holy ingenuity" no es "ingenuidad", sino franqueza o nobleza. Tampoco "corrijas" una cita que ya está en la RV1960 (Sal. 73:17, "Hasta que, entrando en el santuario"). Lee los informes de los revisores: a veces explican cambios dudosos.
+- **Etiquetas sin glosario.** "Direction (n)" salió como "Consejo" y como "Dirección" según el agente. Agrega al traductor toda etiqueta repetida de la obra (Direction → Consejo, Duty → Deber, Evil → Mal) y unifica con `grep -oh "^### [^ (.]*" *.es.txt | sort | uniq -c`.
+- **`validar` no entra en subcarpetas.** Ejecútalo en cada carpeta de obra.
+
+Lecciones del volumen 2 (366 fragmentos, 47 HTML, 3 obras):
+
+- **Notas de capítulos partidos.** En los capítulos largos que se cortan en varios HTML, el OCR deja todas las notas en un bloque al final del capítulo. `brooks-preparar.py` ahora mueve cada nota a la pieza donde está su llamada: en este volumen movió 372.
+- **La regla de contar llamadas funcionó:** 0 llamadas perdidas, frente a 28 fragmentos en el volumen 1. Varios agentes avisaron que corrigieron solos alguna que se les había pasado.
+- **`brooks-siguiente.js <vol> <N> [--revisar]`** entrega los N lotes siguientes y anota en `lanzados-v<vol>.txt` los fragmentos ya lanzados. Así no se lanza un fragmento dos veces ni se olvida ninguno, aunque los agentes terminen en desorden. Esta vez no faltó ningún fragmento.
+- **Revisores fuera de su lista:** un revisor revisó también la clave siguiente a su lista y pisó el archivo de otro. El prompt ahora dice "Claves (revisa solo estas): …".
+- **RV1960 "corregida" otra vez:** un revisor cambió "con amor inalterable" (Ef. vi. 24, RV1960) por "con sinceridad", siguiendo la KJV, y el motivo no decía "RV", así que el filtro no lo separó. Lee los informes: cuando un revisor dice "la cita X dice Y en el inglés", comprueba si la traducción ya es la RV1960.
+- **"END OF VOL. II."** queda como último párrafo del volumen: quítalo del `.en.txt` y del `.es.txt` antes de `unir`.
+- **Títulos de otras obras de Brooks dentro del texto:** los agentes los traducen cada uno a su manera («Hilo de perlas», «Sarta de perlas»). Al final, unifícalos con el título publicado (`grep -oh "«[^»]*perlas»" *.es.txt`).
+- En Git Bash, `grep "[А-Я]"` da falsos positivos con las letras acentuadas. Para buscar caracteres cirílicos usa Node (`/[Ѐ-ӿ]/`).
+
+Lecciones del volumen 3 (344 fragmentos, 28 HTML, 2 obras):
+
+- **Llamadas de nota:** 0 perdidas otra vez. La regla del traductor y la redistribución de notas de `brooks-preparar.py` bastan.
+- **El límite de 20 agentes lo impone también el entorno:** el lanzamiento que pasa de 20 falla ("Concurrent subagent limit reached"), pero `brooks-siguiente.js` ya anotó esos lotes como lanzados. Lánzalos en cuanto se libere un hueco, sin volver a pedirlos.
+- **Revisión mientras se termina la traducción:** se puede empezar a revisar los sermones ya completos. Después, vuelve a correr `revisar` sobre todo el volumen para que los últimos fragmentos tengan su `.revision.json` antes de repartirlos.
+- **Correcciones de los revisores que hay que leer antes de `aplicar`:** de 64, cinco estaban mal o eran peligrosas:
+  - Invirtieron el sentido: "perish or else overcome" → "será vencido"; "fresh" (pez de mar que sigue siendo de agua dulce) → "fresco".
+  - Un reemplazo de párrafo entero (`texto`) apuntaba al número de párrafo equivocado y habría borrado otro párrafo. Prefiere convertirlo en `buscar`/`reemplazar`.
+  - Dos fueron paráfrasis más libres que el original. Busca en el `.en.txt` la frase de cada corrección que cambie el sentido.
+- **Citas bíblicas cambiadas por el traductor:** en 2 Tes. ii. 10-12 el traductor puso otro versículo del pasaje (v. 12) en lugar del que cita Brooks (v. 10), y el revisor lo dejó. Cuando un revisor avisa "la traducción dice X y el inglés Y", compruébalo.
+- **"Isa. I. 10"** (con I mayúscula) también es `Isa. l. 10`, capítulo 50; corrígelo en el `.es.txt`.
+- **Cursiva markdown:** un traductor puso `*plenitudo fontis*`. Busca `\*[^ ]` en los `.es.txt`; los asteriscos de las notas de portada del original sí se dejan.
+- **Apóstrofos sueltos del original** (`telarañas;'[779]`): `brooks-comillas.js` no los toca porque no tienen pareja. Quítalos a mano (`grep -o ".\{0,30\}'.\{0,20\}" *.es.txt`).
+- Los títulos de piezas largos se cortan en el nombre del archivo con `---` (`… Peligrosa Del ---.html`). Si no te gusta, acorta el título en `TITULOS` antes de `html`.
+
+Lecciones del volumen 4 (321 fragmentos, 24 HTML, una sola obra de 58 sermones):
+
+- **Una obra larga sin capítulos:** las secciones de 100k a 160k caracteres (las 16 señales, los 15 motivos, la objeción 4) se cortaron en sus puntos numerados (`1.`, `5. Fifthly`, …), con `tramos()`, en piezas de 40k a 100k. El título del HTML lleva el rango: «Señales De La Verdadera Santidad (1-5)».
+- **Falsos cognados nuevos que pasaron al traductor:** «gracious» → «agraciado» (un fragmento entero) y «graciosamente». Búscalos con `grep -oi "agraciad\|graciosa\?mente\|gracios[oa]s\?"` antes de revisar; el revisor solo ve las alertas de su fragmento.
+- **El traductor cambia rangos de versículos** («Mat. ix. 1-9» → «1-6») y referencias erróneas del original («Heb. vi. 7» → «2 Cor. vii. 1»). La regla es conservar los números de Brooks: compáralos cuando un revisor lo avise.
+- **Sustituciones globales con `sed`:** `s/posición/tesis/g` también cambió «disposición» y «oposición» («distesis», «otesis»). Usa límites de palabra (`\bposición\b`) y revisa el resultado con `grep -o "[a-z]*tesis"`.
+- **`html` no sobrescribe:** si corriges un `.es.txt` después de generar los HTML, vuelve a correr `unir`, `brooks-titulos-trad.js` y `html … --sobrescribir`. Sin esa opción, `html` solo avisa que el archivo ya existe y deja la versión vieja.
+- **"profession" sin «de fe»:** fue la corrección más frecuente de los revisores (unas 20 de 63). Conviene que el traductor escriba «profesión de fe» cuando se trata de la religión.
+
+Lecciones del volumen 5 (406 fragmentos, 31 HTML, tres obras: *La llave de oro*, *El paraíso abierto*, *Una palabra a tiempo*):
+
+- **Un volumen con varias obras:** cada obra tiene su epístola como id 0 y su propia carpeta. Los números de pieza se reinician en cada obra (`id` I, II… dentro de cada una), y `OBRAS` de `brooks-titulos-trad.js` lleva una entrada por obra.
+- **El traductor completa los versículos de memoria:** en Juan x. 18 y xvii. 4 agregó frases de la RV1960 que Brooks no cita. Y en Heb. x. 12 dejó «para siempre» donde lo pone la RV1960, no donde lo pone Brooks (con «se sentó»), aunque el argumento depende de eso. El revisor lo detecta comparando con el inglés. Acepta esas correcciones.
+- **Correcciones de los revisores que hubo que rechazar o ajustar** (6 de 90):
+  - En Joel i. 4 invirtieron oruga/saltón, que la traducción ya tenía como la RV1960.
+  - Una corrección cambió «seria y sinceramente» por «seriamente y sinceramente», que no corrige nada.
+  - Otra apuntaba al párrafo 3 cuando la frase estaba en el 2. Antes de `aplicar`, comprueba que cada `buscar` esté en su párrafo.
+  - Las demás traducían el falso cognado con otra palabra poco natural («alma regenerada» por «gracious soul»); se cambiaron a las del glosario.
+- **Falsos cognados nuevos:**
+  - exquisite (torments) → «intensísimos», «atroces», no «exquisitos». Salió en 5 fragmentos.
+  - security (carnal) → «despreocupación», «seguridad carnal».
+  - vexation → «aflicción».
+  - ingenuity → «franqueza».
+  - sensible sinner → «pecador despierto».
+  - concernments → «intereses».
+  - conceited god → «dios imaginario».
+  - convictions (de pecado) → «conciencia de culpa»: un fragmento tenía 16 casos de «convicciones».
+- **Títulos de las obras de Brooks citados en el texto:** cada traductor inventa el suyo («Hilo de perlas», «Un collar de perlas», «La llave privada del cielo»). Busca `grep -ohiE "(sarta|hilo|collar|cadena) de perlas|llave (secreta|privada) del cielo|…"` y unifícalos con los nombres de las carpetas publicadas.
+- **Asteriscos de Grosart:** las notas de portada que empiezan con `* ` dan falsos positivos estructurales en las epístolas. Márcalas como revisadas en el manifiesto; el vol. 3 ya las publicó así.
+- **Tratamiento:** en las epístolas a una persona («Sir», «Madam») se usa «usted» y «su». Los revisores corrigieron un «tu alma» suelto.
+
+Lecciones del volumen 6 (305 fragmentos, 29 HTML, siete obras: *Las lamentaciones de Londres* y seis sermones sueltos con su epístola):
+
+- **Obras de un solo sermón:** cada una lleva su carpeta, con la epístola (y la nota de Grosart) como id 0 y el sermón como id I. *Un cordial celestial*, que no tiene epístola, va como un único HTML con id I.
+- **Una obra de un millón de caracteres** (*London's Lamentations*) se cortó en 18 piezas de 20k a 100k siguiendo sus listas: los 13 pecados, los 13 apoyos y los 16 deberes. Para ver dónde cortar, sirve listar los párrafos que empiezan con `^[0-9]+\. ` y con `\(n\.\)`, con su posición acumulada en caracteres (`awk '{c+=length($0)} /^[0-9]+\. /{print NR, c}'`).
+- **Falsos positivos estructurales antes de revisar:** si marcas `revisado` en el manifiesto antes de lanzar a los revisores, `brooks-siguiente.js --revisar` se salta esos fragmentos y no los revisa nadie. Márcalos después de `aplicar`, cuando `estado` los deja como pendientes solo por los asteriscos de Grosart.
+- **"improve" → «mejorar»:** fue el falso cognado más frecuente (un fragmento tenía 13 casos). Le siguen «exquisito», «afecciones», «profesores» y «divierte» (amuse = desconcertar). Los revisores los corrigieron, pero conviene buscar `mejor[ao]` cerca de «gracia», «tiempo», «hacienda».
+- **Correcciones que agregan una oración omitida:** revisa la puntuación del punto de unión. En s13-f002 el `reemplazar` dejaba una mayúscula después de punto y coma.
+- **Revisores que dejan errores con «me pareció defendible»:** «my glass is out» quedó como «mi candela se apagó» (es el reloj de arena). Lee las «dudas» de los informes; a veces son errores reales.
+
 ---
 
 ## 5. Prompt del agente traductor
