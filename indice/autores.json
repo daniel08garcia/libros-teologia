@@ -1,6 +1,7 @@
 {
   "autores": {
     "Martín Lutero": { "vida": "1483–1546", "color": "#4a1716" },
+    "Cornelis van Hille": { "vida": "1540–c.1600", "color": "#3a3326" },
     "Jeremiah Burroughs": { "vida": "c.1600–1646", "color": "#1d2b45" },
     "John Cotton": { "vida": "1585–1652", "color": "#3c2a1b" },
     "Abraham Booth": { "vida": "1734–1806", "color": "#2b393b" },
@@ -8,6 +9,8 @@
     "Isaac Ambrose": { "vida": "1604–1664", "color": "#5a3b1b" },
     "William Ames": { "vida": "1576–1633", "color": "#1e3530" },
     "William Bates": { "vida": "1625–1699", "color": "#2a2533" },
+    "John Flavel": { "vida": "1628–1691", "color": "#2e3f5c" },
+    "Samuel Shaw": { "vida": "1635–1696", "color": "#3b4a2a" },
     "Edward Payson": { "vida": "1783–1827", "color": "#22354a" },
     "Jonathan Edwards": { "vida": "1703–1758", "color": "#263a29" },
     "John Hancock": { "vida": "1702–1744", "color": "#1f3346" },
