@@ -32,8 +32,13 @@ jobs:
         with:
           node-version: 22
 
-      # package.json no se versiona, así que las dependencias se instalan con versión fija
+      # package.json no se versiona, así que las dependencias se instalan con versión fija.
+      # ONNXRUNTIME_NODE_INSTALL_CUDA=skip: en Linux x64, onnxruntime-node (dependencia de
+      # transformers) intenta bajar los binarios de GPU (CUDA) de GitHub, y esa descarga ya
+      # no existe (404). Los vectores se calculan con CPU, así que no hacen falta.
       - name: Instalar dependencias
+        env:
+          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
         run: npm install --no-save jsdom@24.1.0 pagefind@1.5.2 @huggingface/transformers@3.8.1
 
       - name: Generar índice
