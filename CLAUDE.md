@@ -13,6 +13,10 @@ Biblioteca de sermones y libros puritanos y reformados traducidos al español, p
 - `temp/ocr_agent.md`: guía para transcribir PDFs escaneados a `.txt` con agentes Haiku (`.claude/agents/ocr-transcriptor.md`) y el script `temp/scripts/ocr.py` (Python con PyMuPDF: info, preparar, pendientes, limpiar, validar, cortes, capa, unir). Al terminar cada libro, se agregan a esa guía (bitácora de la sección 6), al agente o al script las lecciones nuevas.
 - `temp/scripts/sermones.js`: herramienta del flujo de traducción (dividir, revisar, aplicar, unir, html, validar). `temp/scripts/falsos-cognados.json` es el glosario que usa `revisar`.
 
+## Transcribir un PDF escaneado
+
+Cuando el usuario pida transcribir (u "OCR") un PDF, sigue la guía `temp/ocr_agent.md` sin esperar a que la mencione: flujo con `temp/scripts/ocr.py`, agentes `ocr-transcriptor` (Haiku, lotes de 5 páginas, como máximo 20 a la vez), validación, cortes, títulos y unión en un `.txt` en `temp/originales/`. Al terminar, agrega las lecciones a la guía (paso 10 y bitácora de la sección 6).
+
 ## Traducir un libro o sermón
 
 Sigue la guía `temp/ai_agent.md`: flujo completo, parámetros, prompts de los agentes y glosario de falsos cognados. La sección 4.1 cubre los libros de varios autores y usa *Puritan Sermons: The Morning Exercises at Cripplegate* como ejemplo. Sus instrucciones de agentes (`temp/trabajo/cripplegate-traductor.md` y `cripplegate-revisor.md`) sirven de modelo para obras nuevas.

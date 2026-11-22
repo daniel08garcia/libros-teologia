@@ -334,6 +334,48 @@ Lecciones del volumen 6 (305 fragmentos, 29 HTML, siete obras: *Las lamentacione
 - **Correcciones que agregan una oración omitida:** revisa la puntuación del punto de unión. En s13-f002 el `reemplazar` dejaba una mayúscula después de punto y coma.
 - **Revisores que dejan errores con «me pareció defendible»:** «my glass is out» quedó como «mi candela se apagó» (es el reloj de arena). Lee las «dudas» de los informes; a veces son errores reales.
 
+### 4.3. Un volumen de obras selectas (varias obras de un autor)
+
+**Ejemplo: _Select Works of Thomas Watson_** (edición de 1855, a dos columnas; 642 fragmentos, 113 HTML). El volumen tiene *A Body of Practical Divinity* (el Catecismo Menor, los Diez Mandamientos y el Padrenuestro), siete sermones, *The Art of Divine Contentment* y cuatro tratados. Se publicó en `siglo/XVII/Thomas Watson/` con **una carpeta por obra**:
+
+- `Un Tratado De Teología Práctica`, `Los Diez Mandamientos` y `El Padrenuestro`: las tres partes del *Body*, cada una en su carpeta.
+- `Sermones Selectos`.
+- `El Arte Del Contentamiento Divino`: un HTML por capítulo.
+- `Tratados`: un HTML por tratado.
+- `Vida De Thomas Watson`: la noticia biográfica, en la carpeta del autor.
+
+Herramientas, todas en `temp/trabajo/`:
+
+- `watson-preparar.py` corta el libro por zonas (`ZONAS`: líneas, destino y fecha) y por los títulos `## ` del OCR. Las secciones muy largas se cortan además en las líneas de `CORTES`, con su título inglés; los títulos de las primeras partes van en `TITULO_PARTE1`. Cuando el párrafo que sigue al título es «Ref. texto» o «texto, Ref.», lo parte en dos párrafos y pone `versiculo: "auto"`.
+- `watson-manifiesto.py` copia el plan al manifiesto.
+- `watson-siguiente.js <N> [--revisar]` hace lo mismo que el de Brooks, con 6 fragmentos por lote para traducir y 10 para revisar.
+- `watson-arreglos.js` hace los arreglos globales después de `aplicar`.
+- `watson-titulos-trad.js` pone los títulos en español.
+
+Lecciones:
+
+- **Ordinales con punto:** los traductores escribieron «1.º. El espíritu…» 291 veces (Watson usa «1st.»). `watson-arreglos.js` lo cambia a «1.º El espíritu…». Conviene que el traductor lo sepa de antemano: «1st,» → «1.º,», «1st.» → «1.º».
+- **Párrafos partidos por el OCR a media frase:** se reconocen porque el párrafo no termina en puntuación y el siguiente empieza en minúscula. Aparecieron 5. Únelos en el `.en.txt` y en el `.es.txt` a la vez, para que sigan correspondiéndose 1 a 1. Búscalos con Node (`!/[.:;?!"”)\]—]$/` seguido de `/^[a-z]/`) y revisa también los límites entre fragmentos.
+- **Versículos que `preparar` no reconoció.** Pasó con tres formas, que hay que partir a mano en referencia y texto, con `versiculo: "auto"`:
+  - `### Ref. texto` (s52, s84, s87, s90).
+  - El texto largo de un mandamiento, de más de 400 caracteres (s56).
+  - La referencia con un libro sin punto, como `James iii. 6.`, que la expresión regular no esperaba.
+  Revisa en el registro de `html` el «primer párrafo» de cada pieza: si empieza con `###` o con una referencia, falta partirlo.
+- **Comillas en el versículo:** unos traductores pusieron el texto del versículo entre «» y otros no. Como va en un `<blockquote>`, se quitaron todas.
+- **Capitulares del original:** «EN el primer mandamiento…», «HABIENDO terminado…». Búscalas con Node (`/^\p{Lu}{2,}\p{Ll}/u`, sin los números romanos) y pásalas a «En», «Habiendo».
+- **Errores de imprenta en las referencias de los encabezados:** «Exod. xx. 13» en el octavo mandamiento (es xx. 15), «Exod. XX. 16», «Mat. X. 16» y «Gen. i. 25» (es l. 25, porque «God will surely visit you» está en Gén. 50). En los encabezados se corrigieron. Dentro del texto se conserva el número de Watson, salvo que el error sea evidente.
+- **Nombres:** el original dice «Barak» en Jer. xlv. 5, pero el pasaje habla de Baruc. Se tradujo «Baruc».
+- **El revisor dejaba omisiones «porque el sentido se conserva»** (un término hebreo, un verbo de una cita). El prompt del revisor ahora pide corregir **toda** omisión, aunque sea de una palabra.
+- **Correcciones rechazadas (3 de 93):**
+  - «put up their shop-windows» traducido como «abren las persianas», cuando significa cerrar la tienda.
+  - Una corrección de Deut. vi. 13 que quitaba «solo», que la RV1960 sí tiene.
+  - Un cambio innecesario de Prov. xxii. 14.
+
+  Las de citas que **quitan** frases agregadas por el traductor (versículos completados de memoria) se aceptan todas.
+- **Un revisor no escribió su archivo** (`s94-f006`), aunque respondió «OK». Antes de `aplicar`, comprueba que cada `.es.txt` tenga su `.correcciones.json`. Otro revisor escribió archivos de claves ajenas y los borró. La clave siguiente tuvo que revisarse igual.
+- **Una corrección fallida porque el traductor ya lo había hecho bien:** latín «et en proximum» → «in». Márcala como revisada en el manifiesto.
+- **Títulos con dos puntos** («La Primera Petición: Santificado Sea Tu Nombre») se ven bien en el `<h1>` y en el índice. En el nombre del archivo se pierden los dos puntos.
+
 ---
 
 ## 5. Prompt del agente traductor

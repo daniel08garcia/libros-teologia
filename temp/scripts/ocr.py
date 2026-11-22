@@ -271,6 +271,29 @@ def movido(tramo, otro):
     return cubierto >= 0.7 * len(tramo)
 
 
+def parecido_en_texto(tramo, texto):
+    """Mayor parecido (0-1, por caracteres) entre el tramo y algún pasaje de igual largo del texto.
+    Sirve para los tramos que la capa OCR leyó mal ("tlie liath" por "the hath") o que mezcló
+    de dos columnas: el tramo está en la transcripción, pero escrito bien."""
+    norm = lambda s: re.sub(r"[^a-z ]", "", re.sub(r"\s+", " ", s.lower()))
+    a, b = norm(tramo), norm(texto)
+    n = len(a)
+    if not n:
+        return 0.0
+    mejor = 0.0
+    for i in range(0, max(1, len(b) - n), 3):
+        sm = difflib.SequenceMatcher(None, a, b[i:i + n], autojunk=False)
+        if sm.quick_ratio() > mejor:
+            mejor = max(mejor, sm.ratio())
+    return mejor
+
+
+def es_adorno(tramo):
+    """Raya de adorno que la capa OCR lee como letras sueltas ("v v v x v")."""
+    t = tramo.split()
+    return len(t) >= 5 and sum(len(w) <= 2 for w in t) >= 0.7 * len(t)
+
+
 def revisar_pagina(trabajo, n):
     errores, avisos = [], []
     pt = ruta(trabajo, "texto", n, ".txt")
@@ -296,7 +319,7 @@ def revisar_pagina(trabajo, n):
     if RE_VOLADO.search(texto):
         errores.append("llamadas de nota en superíndice (¹ ²); pásalas a [n] con 'limpiar'")
     if (re.match(r"(?i)\s*(here is|here's)\b", texto) or re.search(r"(?i)\b(transcription|transcripci[oó]n|listo)\b", texto[:200])
-            or re.search(r"(?i)(listo|done)\s*$", texto)):
+            or re.search(r"(?i)(^|\n)\s*(listo|done)\.?\s*$", texto)):
         errores.append("texto agregado por el agente (comentario o 'listo')")
     for frase in FRASES_EJEMPLO:
         if " ".join(palabras(frase)[:5]) in " ".join(palabras(texto)) and not en_capa(frase, pc):
@@ -353,8 +376,17 @@ def revisar_pagina(trabajo, n):
         elif ratio < 0.80:
             avisos.append("parecido bajo con la capa OCR (%.2f)" % ratio)
         for t in omitidos:
-            if not movido(t.split(), pt_):
-                errores.append("posible omisión (está en la capa OCR): «%s»" % t[:120])
+            if movido(t.split(), pt_):
+                continue
+            if es_adorno(t):
+                avisos.append("raya de adorno leída como letras en la capa OCR: «%s»" % t[:60])
+                continue
+            p = parecido_en_texto(t, cuerpo)
+            if p >= 0.65:
+                # la capa lo leyó mal o mezcló renglones de dos columnas; el texto sí está
+                avisos.append("tramo de la capa mal leído, pero presente (parecido %.2f): «%s»" % (p, t[:100]))
+            else:
+                errores.append("posible omisión (está en la capa OCR, parecido %.2f): «%s»" % (p, t[:120]))
         for t in agregados:
             if not movido(t.split(), pc):
                 avisos.append("posible texto agregado (no está en la capa OCR): «%s»" % t[:120])
