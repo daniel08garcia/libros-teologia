@@ -133,7 +133,13 @@ def palabras(s):
     """Palabras normalizadas para comparar con la capa OCR."""
     s = s.lower().replace("ſ", "s").replace("æ", "ae").replace("œ", "oe")
     s = re.sub(r"-\s*\n\s*", "", s)  # guiones de fin de línea de la capa
-    return re.findall(r"[a-z0-9]+", s)
+    return re.findall(r"[a-z0-9]+", antigua(s))
+
+
+def antigua(s):
+    """Iguala letras que la tipografía del siglo XVII confunde: la capa lee la ſ larga como f
+    ("fhall") y el impreso alterna u/v e i/j ("vnto", "Iesus"). En libros modernos no cambia nada importante."""
+    return s.translate(str.maketrans("sfvj", "ffui"))
 
 
 def partes(texto):
@@ -275,17 +281,46 @@ def parecido_en_texto(tramo, texto):
     """Mayor parecido (0-1, por caracteres) entre el tramo y algún pasaje de igual largo del texto.
     Sirve para los tramos que la capa OCR leyó mal ("tlie liath" por "the hath") o que mezcló
     de dos columnas: el tramo está en la transcripción, pero escrito bien."""
-    norm = lambda s: re.sub(r"[^a-z ]", "", re.sub(r"\s+", " ", s.lower()))
+    # solo letras, sin espacios: la capa de algunos escaneos pega palabras ("thifgod ifone")
+    norm = lambda s: antigua(re.sub(r"[^a-z]", "", s.lower()))
     a, b = norm(tramo), norm(texto)
     n = len(a)
     if not n:
         return 0.0
+    if n > 300:
+        # un tramo largo se mide por trozos (la comparación por caracteres es cuadrática)
+        trozos = [a[i:i + 200] for i in range(0, n, 200)]
+        trozos = [t for t in trozos if len(t) >= 40] or trozos[:1]
+        return sum(parecido_en_texto(t, b) for t in trozos) / len(trozos)
+    # dos pasadas (en páginas largas a dos columnas, como Perkins, recorrer todo cada 3 caracteres
+    # tardaba más de un minuto por página): primero ventanas espaciadas, medidas con quick_ratio
+    # (letras en común, barato); luego, alrededor de las 6 mejores, ratio exacto cada 3 caracteres.
+    sm = difflib.SequenceMatcher(None, autojunk=False)
+    sm.set_seq2(a)
+    fin = max(1, len(b) - n)
+    paso = max(3, n // 6)
+    candidatos = []
+    for i in range(0, fin, paso):
+        sm.set_seq1(b[i:i + n])
+        candidatos.append((sm.quick_ratio(), i))
+    candidatos.sort(reverse=True)
     mejor = 0.0
-    for i in range(0, max(1, len(b) - n), 3):
-        sm = difflib.SequenceMatcher(None, a, b[i:i + n], autojunk=False)
-        if sm.quick_ratio() > mejor:
-            mejor = max(mejor, sm.ratio())
+    for _, c in candidatos[:6]:
+        for i in range(max(0, c - paso), min(fin, c + paso + 1), 3):
+            sm.set_seq1(b[i:i + n])
+            if sm.quick_ratio() > mejor:
+                mejor = max(mejor, sm.ratio())
     return mejor
+
+
+def letras_en_comun(capa, texto):
+    """Parte (0-1) de las secuencias de 4 letras de la capa que están en el texto, sin espacios ni signos.
+    No depende de cómo la capa separa las palabras. En Perkins dio 0,71-0,86 con la propia página
+    y 0,23-0,37 con la página vecina."""
+    tetra = lambda s: set(s[i:i + 4] for i in range(len(s) - 3))
+    letras = lambda s: antigua(re.sub(r"[^a-z]", "", s.lower()))
+    a, b = tetra(letras(capa)), tetra(letras(texto))
+    return len(a & b) / float(max(1, len(a)))
 
 
 def es_adorno(tramo):
@@ -357,6 +392,21 @@ def revisar_pagina(trabajo, n):
         for l in notas.splitlines():
             if l.strip().startswith("[sigue]") and len(cola(l)) > 20 and cola(l) in prev:
                 errores.append("la nota [sigue] repite una nota de la página anterior: «%s»" % cola(l)[:60])
+    # la misma palabra al final de la anterior y al comienzo de esta: reclamo copiado («Secondly, ‖ Secondly,»)
+    # o palabra cortada completada en las dos páginas («resistance, ‖ stance,», «redem ‖ redemption»)
+    if os.path.exists(previa):
+        cuerpo_prev = partes(leer(previa))[0].rstrip()
+        fin = re.findall(r"[A-Za-z]+", cuerpo_prev[-60:])
+        ini = re.findall(r"[A-Za-z]+", re.sub(r"^\s*\[\[sigue\]\]", "", cuerpo)[:60])
+        if fin and ini and not cuerpo_prev.endswith("-") and not RE_TITULO.match(cuerpo.lstrip()):
+            a, b = fin[-1].lower(), ini[0].lower()
+            if a == b or (len(b) >= 4 and len(a) > len(b) and a.endswith(b)) or (len(a) >= 4 and len(b) > len(a) and b.startswith(a)):
+                errores.append("palabra repetida en el corte con la página anterior: «%s ‖ %s» (¿reclamo o palabra completada dos veces?)" % (fin[-1], ini[0]))
+        # la anterior termina cortada («doubt-») y esta repite la palabra entera («doubtlesse»): al unir sale «doubtdoubtlesse»
+        if fin and ini and cuerpo_prev.endswith("-") and not RE_TITULO.match(cuerpo.lstrip()):
+            a, b = fin[-1].lower(), ini[0].lower()
+            if len(a) >= 2 and len(b) > len(a) and b.startswith(a):
+                errores.append("la página anterior termina en «%s-» y esta empieza con la palabra entera «%s»: quita «%s» del comienzo" % (fin[-1], ini[0], ini[0][:len(a)]))
 
     # cobertura contra la capa OCR
     pt_ = palabras(re.sub(r"\[\[[^\]]*\]\]|\[(\d+|sigue|ilegible|griego|hebreo)\]|" + re.escape(SEP_NOTAS), " ", texto))
@@ -371,8 +421,16 @@ def revisar_pagina(trabajo, n):
             errores.append("la transcripción tiene %d palabras y la capa OCR %d (%.0f%%): posible omisión" % (len(pt_), len(pc), proporcion * 100))
         elif proporcion > 1.15:
             avisos.append("la transcripción tiene %d palabras y la capa OCR %d (%.0f%%)" % (len(pt_), len(pc), proporcion * 100))
-        if ratio < 0.45:
+        # por letras: si la capa pega las palabras (Perkins), cuenta pocas y una columna omitida pasa por palabras
+        lt = len(re.findall(r"[A-Za-z]", re.sub(r"\[\[[^\]]*\]\]|\[(\d+|sigue|ilegible|griego|hebreo)\]", " ", texto)))
+        lc = len(re.findall(r"[A-Za-z]", capa))
+        if proporcion >= 0.85 and lc > 800 and lt < 0.8 * lc:
+            errores.append("la transcripción tiene %d letras y la capa OCR %d (%.0f%%): posible omisión (¿una columna entera?)" % (lt, lc, 100.0 * lt / lc))
+        if ratio < 0.45 and letras_en_comun(capa, cuerpo + " " + notas) < 0.55:
             errores.append("parecido muy bajo con la capa OCR (%.2f): ¿es el texto de otra página?" % ratio)
+        elif ratio < 0.45:
+            # la capa pega o parte las palabras (Perkins, siglo XVII), pero las letras sí coinciden
+            avisos.append("parecido bajo con la capa OCR por palabras (%.2f), pero las letras coinciden" % ratio)
         elif ratio < 0.80:
             avisos.append("parecido bajo con la capa OCR (%.2f)" % ratio)
         for t in omitidos:

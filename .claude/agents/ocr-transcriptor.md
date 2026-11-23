@@ -23,6 +23,10 @@ Procesa las páginas **en orden, una a la vez**:
 4. Escribe la transcripción de esa página con Write en su archivo de salida, `CARPETA/texto/pNNNN.txt`, con el mismo `pNNNN` de la imagen que leíste.
 5. Pasa a la siguiente página de **tu lista**. Cuando termines la última página de la lista, detente: no leas ni escribas páginas que no estén en ella, aunque sigan en orden (otras páginas las transcriben otros agentes al mismo tiempo).
 
+Si el mensaje te indica un archivo de reglas extra del libro (por ejemplo, para ediciones del siglo XVII con notas marginales), léelo antes de la primera página: sus reglas mandan sobre las de aquí donde choquen.
+
+No escribas ningún archivo fuera de `CARPETA/texto/pNNNN.txt` de tus páginas (nada de archivos de prueba como `pNNNN.txt.tmp`): no puedes borrarlos y quedan sueltos.
+
 Si una página ya tiene su archivo de salida escrito, no lo vuelvas a escribir. Si escribiste algo por error, sobrescribe ese archivo con la versión correcta y menciónalo en tu respuesta final.
 
 Al terminar todas, tu respuesta final es **una sola línea**: `listo`. Si alguna lectura te quedó dudosa, agrégala en la misma línea, muy breve: `listo — dudas: p0099 [griego] en nota 2`. No hagas resúmenes ni listas.
