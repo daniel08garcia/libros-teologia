@@ -376,6 +376,80 @@ Lecciones:
 - **Una corrección fallida porque el traductor ya lo había hecho bien:** latín «et en proximum» → «in». Márcala como revisada en el manifiesto.
 - **Títulos con dos puntos** («La Primera Petición: Santificado Sea Tu Nombre») se ven bien en el `<h1>` y en el índice. En el nombre del archivo se pierden los dos puntos.
 
+### 4.4. Un volumen de obras completas con ortografía antigua (Perkins)
+
+**Ejemplo: _The Works of William Perkins_, vol. 1** (Londres, c. 1616; 962 fragmentos, 231 piezas, 18 obras, unos 4,4 millones de caracteres). Es el texto transcrito con `ocr.py` (ver `temp/ocr_agent.md`). Se publicó en `siglo/XVI/William Perkins/`, **una carpeta por obra**, y cada obra lleva su propia fecha de primera edición.
+
+Herramientas, todas en `temp/trabajo/`:
+
+- `perkins1-preparar.py` corta el volumen por obras (`OBRAS`: líneas, carpeta y fecha) y por los títulos `## `. Usa estas listas:
+  - `QUITAR`: portadillas que no se publican.
+  - `BORRAR_TITULO`: títulos que repiten el de la obra.
+  - `PREFACIO`: dedicatorias y avisos, que se juntan en el id 0.
+  - `JUNTAR`: secciones que van con la anterior.
+  - `CORTES_TEXTO`: cortes que no empiezan en un título.
+  - `SEPARAR`: piezas cortas que deben quedar solas.
+
+  Las piezas de más de 85.000 caracteres se cortan en partes de unos 65.000, nunca delante de un bloque de notas. Las partes siguientes llevan `saltar 0`.
+- `perkins1-manifiesto.py` copia `plan.json` al manifiesto.
+- `perkins-siguiente.js` reparte los lotes (6 para traducir, 10 para revisar). Para revisar solo entrega claves que ya tienen `.revision.json`: corre `revisar` otra vez cuando terminen las últimas traducciones.
+- `perkins-traductor.md` y `perkins-revisor.md` son las instrucciones de los agentes. Cubren la ortografía de 1600 (vnto, haue, Iesus), las etiquetas (Quest./Answ./Obiect./Vse), el Credo, el Padrenuestro y el Decálogo fijos, y los términos de controversia.
+- `perkins1-arreglos.js` hace los arreglos globales después de `aplicar`: notas de imprenta de las tablas, párrafos partidos y capitulares.
+- `perkins1-titulos-trad.js` pone los títulos y las partes «(Parte N)». También pone `versiculo` como objeto `{referencia, texto}` en las piezas que empiezan con un texto bíblico, y `saltar_parrafos 2` donde el segundo párrafo es el subtítulo del capítulo.
+
+Lecciones:
+
+- **Ioh. / Iob.:** la edición confunde Juan y Job. La regla del traductor (si el capítulo pasa de 42 o el contexto es del Evangelio, es Juan) funcionó; los revisores corrigieron los casos que quedaban.
+- **«Cap. 5. 12» sin libro** remite al mismo libro recién citado. Los primeros traductores inventaban el libro («Apoc.», «Ef.»). La regla está ahora en las dos instrucciones.
+- **«Profession»** es casi siempre «profesión de fe». El glosario lo marca en cada aparición y los revisores lo corrigieron unas 15 veces. Pero en *Las vocaciones* («callings and professions») significa oficios: se rechazó esa corrección.
+- **Falsos cognados del inglés de 1600** que corrigieron los revisores: «improve» = refutar, «trying» = prueba, «discourse» = plática, «conference» = conversación, «deputy» = delegado, «caled» = calmó, «faith» por «saith».
+- **Notas de imprenta de las tablas plegadas** («Place this Table betweene fol. 74. and 75.»): a veces son un párrafo propio y a veces van pegadas al comienzo del párrafo siguiente. Los traductores las tradujeron («Colóquese esta tabla…»). Se quitan después de `aplicar`, en los dos idiomas a la vez.
+- **Un traductor desalineó un fragmento** (`s227-f001`): partió un párrafo en dos y omitió el último, aunque el recuento le daba igual. `revisar` lo detectó por longitud (80 % del inglés). Se rearmó a mano. Revisa siempre las alertas de «longitud» antes de lanzar los revisores.
+- **Numeración desplazada:** algunos traductores escribieron «Razón II.» u «Obj. IV.» donde el inglés dice «II. Reason.». `revisar` lo marca como error de numeración; se arregla con sed antes de revisar.
+- **Interlocutores de los diálogos:** «Ch.» es la Iglesia (*Church*) en la 1.ª de Juan en diálogo y el «Cristiano» en otros diálogos. Un lote lo tradujo mal; el revisor lo corrigió mirando la lista de interlocutores del comienzo.
+- **Los revisores Haiku encuentran poco** (152 correcciones en 962 fragmentos, la mayoría vocabulario, citas completadas de memoria y referencias cambiadas). Las alertas de «aprehender» casi siempre son falsos positivos: es la fe que aprehende a Cristo.
+- **Ninguna corrección de cita fue de RV1960 «de memoria»:** el filtro no separó ninguna. Las de citas quitaron frases que el traductor había agregado al completar el versículo.
+
+**Vol. 2** (1631; 767 fragmentos, 116 piezas, 8 obras, 3,9 millones de caracteres). Se usaron las mismas herramientas con el prefijo `perkins2-`, y se agregaron dos:
+
+- `perkins2-notas.js [<trabajo>]` corre después de `unir`. El OCR deja las notas al margen al final del capítulo. Cuando un capítulo largo se corta en partes, las notas quedan en otra parte que sus llamadas, y la página de la Parte 1 se publica sin sus notas. El script mueve cada nota «[n] …» a la pieza de la misma obra que tiene la llamada [n]. **El vol. 1 tenía el mismo fallo** (941 llamadas sin nota en 17 piezas): se arregló con este script y se regeneró su HTML. Antes se comprobó que `html --salida` daba los mismos archivos que los publicados. Córrelo siempre en volúmenes con notas al margen y piezas en partes. Para comprobar, cuenta las llamadas que no tienen nota en su pieza: deben ser 0.
+- `perkins-v2/comprobar-correcciones.js [--lista]` comprueba antes de `aplicar` que cada «buscar» está en su párrafo y lista todas las correcciones. Los revisores Haiku se equivocaron de número de párrafo en 8 de 102 correcciones; el texto estaba en otro párrafo y se corrigió el número.
+
+Lecciones del vol. 2:
+
+- **Párrafos cortados entre dos fragmentos** («Apo-» al final de uno, «stle» al comienzo del siguiente): `perkins2-arreglos.js` tiene `CRUZAR` para unirlos, además de `UNIR` dentro de un fragmento. El detector `perkins-v2/cortes2.js` encuentra los dos casos.
+- **Las alertas de los traductores no siempre se cumplen:** varios avisaron de cortes que no existían. Fíate del detector, no de los informes.
+- **Restos del OCR que el traductor copió:** una frase duplicada (`s107-f004`), descripciones del transcriptor en las notas («(nota marginal del margen…)», `s108-f002`) y una «A» suelta (`s69-f002`). Se quitan en los dos idiomas.
+- **Los traductores «corrigen» el original en silencio:** en una tabla, «The Rubenites warre» quedó como «La guerra contra los filisteos». Lee las dudas que reportan los revisores y decide tú.
+- **Una corrección del revisor era un error del OCR:** «mobilitie» es «nobilitie» (m/n) y no «plebe». Se descartó antes de `aplicar`.
+- **«Pretend», «actually», «earnest», «affections», «comfortable»** fueron los falsos cognados más corregidos en este volumen.
+- **Pausa a mitad de la revisión:** detén los agentes con TaskStop y quita de `lanzados-rev.txt` las claves que no tienen `.correcciones.json`. Si no, el reparto no las vuelve a dar. Deja el estado en un `REANUDAR.md` en la carpeta de trabajo.
+- **Un revisor dijo «OK» y no escribió el archivo** (`s114-f003`). Antes de `aplicar`, cuenta los fragmentos sin `.correcciones.json`.
+
+**Vol. 3** (1631; 1110 fragmentos, 119 piezas, 11 obras, 5,6 millones de caracteres). Se usaron las mismas herramientas con el prefijo `perkins3-`. Cambios en las herramientas:
+
+- `perkins3-preparar.py` tiene `REEMPLAZAR`: cambia una línea del original antes de cortar. Sirve para poner un `## ` donde empieza el comentario y el OCR lo dejó como párrafo («A Godly and Learned EXPOSITION … Matth. 5. 1.» pasa a «## CHAP. 5.» + «### Matth. 5. 1. …») o como `### `.
+- Las partes de las piezas largas se cortan, si se puede, antes de un subtítulo `### ` (versículo), hasta 12.000 caracteres después de la meta. Los títulos de las partes son «Mateo 5 (Parte N)», «Hebreos 11 (Parte N)», «Apocalipsis 2 (Parte N)».
+- `perkins3-titulos-trad.js`: `VERSICULOS` acepta un tercer valor, `saltar_parrafos` (la *Brujería* tiene título, «### ÉX. 22. 18.» y el versículo: `["Éx. 22. 18", 3, 3]`).
+- `perkins3-arreglos.js` quita la puntuación doble tras una referencia («19.:», «10.,»): 404 casos. Es frecuente en todo el volumen.
+- `perkins-v3/comprobar-correcciones.js` acepta las correcciones de párrafo completo (`texto`), que el script del vol. 2 no leía.
+- `perkins-traductor.md` tiene una sección «Obras del vol. 3»: brujería, pronósticos, gobierno de la familia, Apocalipsis, diálogo Cristiano/Mundano y letra capital perdida.
+
+Lecciones del vol. 3:
+
+- **Un corte de partes puede caer a media frase** cuando el OCR dejó un párrafo partido en dos. `CRUZAR` sirve también entre dos piezas seguidas de la misma obra (`s35-f011` + `s36-f001`). El detector `cortes2.js` no lo ve: compara el último párrafo de cada pieza con el primero de la siguiente.
+- **Los traductores cambian el sentido «para que tenga lógica»** cuando el inglés trae un error del OCR («did not say in their hearts», «prone to doe good», «approved» por «reproved»). En estos casos la lectura del traductor era la buena. Revisa sus avisos, pero casi siempre se dejan.
+- **Correcciones erróneas de los revisores**, descartadas antes de `aplicar`:
+  - «el que vivo» (Apoc. 1:18) cambiado por «el que vive»: la RV1960 dice «el que vivo»;
+  - una corrección que borraba palabras («de su profesión pública» → «pública»);
+  - una de párrafo completo con el número de párrafo equivocado (`s65-f001`), que pisó el párrafo 3 con el texto del 4. Se rehízo a mano.
+
+  Revisa una por una las correcciones de tipo `texto`.
+- **Nombres ingleses en las dedicatorias:** se dejan en inglés (Sir John Savile, no «sir Juan»), como en los vols. 1 y 2. Un traductor los tradujo.
+- **El registro del diálogo** (*Fin del mundo*) quedó mezclado: unos lotes usaban «usted» entre Cristiano y Mundano y otros los tuteaban. Se unificó a mano a «usted» en `sermones/s80.es.txt`, sin tocar las citas bíblicas. Conviene fijar el registro en las instrucciones antes de traducir diálogos.
+- **Si el sentido del inglés parece absurdo, mira la imagen** (`ocr-perkins-v3/paginas/pNNNN.png`; la página sale de `grep` en `ocr-perkins-v3/texto/`). «wee must have the company … of obstinate sinners» era «must **hate**» en el impreso: el OCR confundió t/v. Se corrigió en el `.txt` del OCR, el original, el fragmento y la traducción.
+- **Con 20 agentes a la vez, el volumen entero tomó unas 185 tandas de traducción y 111 de revisión.** Los revisores corrigieron 164 cosas en 1110 fragmentos. La mayoría fueron «profession» → «profesión de fe», «actually», «pretend», «apprehension» → «percepción», frases añadidas a las citas y omisiones.
+
 ---
 
 ## 5. Prompt del agente traductor
